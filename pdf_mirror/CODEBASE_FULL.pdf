@@ -1,0 +1,2513 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Count 32 /Kids [4 0 R 6 0 R 8 0 R 10 0 R 12 0 R 14 0 R 16 0 R 18 0 R 20 0 R 22 0 R 24 0 R 26 0 R 28 0 R 30 0 R 32 0 R 34 0 R 36 0 R 38 0 R 40 0 R 42 0 R 44 0 R 46 0 R 48 0 R 50 0 R 52 0 R 54 0 R 56 0 R 58 0 R 60 0 R 62 0 R 64 0 R 66 0 R] >>
+endobj
+3 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Courier >>
+endobj
+4 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R >> >> /Contents 5 0 R >>
+endobj
+5 0 obj
+<< /Length 3209 >>
+stream
+BT
+/F1 9 Tf
+1 0 0 1 36 756 Tm (# 00_SheetDb.gs) Tj
+1 0 0 1 36 745 Tm () Tj
+1 0 0 1 36 734 Tm (**Source path:** `sheet_db_lib/00_SheetDb.gs`) Tj
+1 0 0 1 36 723 Tm () Tj
+1 0 0 1 36 712 Tm (```javascript) Tj
+1 0 0 1 36 701 Tm (/**) Tj
+1 0 0 1 36 690 Tm ( * @fileoverview Public, library-visible exports for SheetDb.) Tj
+1 0 0 1 36 679 Tm ( */) Tj
+1 0 0 1 36 668 Tm () Tj
+1 0 0 1 36 657 Tm (/**) Tj
+1 0 0 1 36 646 Tm ( * Library semantic version.) Tj
+1 0 0 1 36 635 Tm ( *) Tj
+1 0 0 1 36 624 Tm ( * NOTE: Keep this in sync with release tags when publishing as an Apps Script library.) Tj
+1 0 0 1 36 613 Tm ( * @type {string}) Tj
+1 0 0 1 36 602 Tm ( */) Tj
+1 0 0 1 36 591 Tm (var SHEET_DB_VERSION = '0.1.0';) Tj
+1 0 0 1 36 580 Tm () Tj
+1 0 0 1 36 569 Tm (/**) Tj
+1 0 0 1 36 558 Tm ( * Creates a new SheetDb client instance.) Tj
+1 0 0 1 36 547 Tm ( *) Tj
+1 0 0 1 36 536 Tm ( * @param {Object=} options Client configuration options.) Tj
+1 0 0 1 36 525 Tm ( * @return {DbClient}) Tj
+1 0 0 1 36 514 Tm ( */) Tj
+1 0 0 1 36 503 Tm (function _sheetDbCreateClient\(options\) {) Tj
+1 0 0 1 36 492 Tm (  return new DbClient\(new Config\(options || {}\)\);) Tj
+1 0 0 1 36 481 Tm (}) Tj
+1 0 0 1 36 470 Tm () Tj
+1 0 0 1 36 459 Tm (/**) Tj
+1 0 0 1 36 448 Tm ( * Bootstraps a client with one or more table schemas.) Tj
+1 0 0 1 36 437 Tm ( *) Tj
+1 0 0 1 36 426 Tm ( * @param {Object=} options) Tj
+1 0 0 1 36 415 Tm ( * @param {Array<{name: string, schema: Object}>=} options.tables Tables to register.) Tj
+1 0 0 1 36 404 Tm ( * @param {Object=} options.clientOptions Configuration passed to `createClient`.) Tj
+1 0 0 1 36 393 Tm ( * @return {DbClient}) Tj
+1 0 0 1 36 382 Tm ( */) Tj
+1 0 0 1 36 371 Tm (function _sheetDbBootstrap\(options\) {) Tj
+1 0 0 1 36 360 Tm (  var opts = options || {};) Tj
+1 0 0 1 36 349 Tm (  var client = _sheetDbCreateClient\(opts.clientOptions || {}\);) Tj
+1 0 0 1 36 338 Tm (  var tables = opts.tables || [];) Tj
+1 0 0 1 36 327 Tm () Tj
+1 0 0 1 36 316 Tm (  tables.forEach\(function\(table\) {) Tj
+1 0 0 1 36 305 Tm (    if \(table && table.name && table.schema\) {) Tj
+1 0 0 1 36 294 Tm (      client.registerTable\(table.name, table.schema\);) Tj
+1 0 0 1 36 283 Tm (    }) Tj
+1 0 0 1 36 272 Tm (  }\);) Tj
+1 0 0 1 36 261 Tm () Tj
+1 0 0 1 36 250 Tm (  return client;) Tj
+1 0 0 1 36 239 Tm (}) Tj
+1 0 0 1 36 228 Tm () Tj
+1 0 0 1 36 217 Tm (/**) Tj
+1 0 0 1 36 206 Tm ( * Basic health check that can be called by consuming projects.) Tj
+1 0 0 1 36 195 Tm ( *) Tj
+1 0 0 1 36 184 Tm ( * @return {{ok: boolean, version: string, timestamp: string, details: Object}}) Tj
+1 0 0 1 36 173 Tm ( */) Tj
+1 0 0 1 36 162 Tm (function _sheetDbHealthCheck\(\) {) Tj
+1 0 0 1 36 151 Tm (  try {) Tj
+1 0 0 1 36 140 Tm (    var client = _sheetDbCreateClient\(\);) Tj
+1 0 0 1 36 129 Tm (    return {) Tj
+1 0 0 1 36 118 Tm (      ok: !!client,) Tj
+1 0 0 1 36 107 Tm (      version: SHEET_DB_VERSION,) Tj
+1 0 0 1 36 96 Tm (      timestamp: Util.nowIso\(\),) Tj
+1 0 0 1 36 85 Tm (      details: {) Tj
+1 0 0 1 36 74 Tm (        clientReady: true,) Tj
+1 0 0 1 36 63 Tm (        spreadsheetMode: client._config && client._config.spreadsheetId ? 'by_id' : 'active') Tj
+1 0 0 1 36 52 Tm (      }) Tj
+1 0 0 1 36 41 Tm (    };) Tj
+ET
+endstream
+endobj
+6 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R >> >> /Contents 7 0 R >>
+endobj
+7 0 obj
+<< /Length 3237 >>
+stream
+BT
+/F1 9 Tf
+1 0 0 1 36 756 Tm (  } catch \(err\) {) Tj
+1 0 0 1 36 745 Tm (    return {) Tj
+1 0 0 1 36 734 Tm (      ok: false,) Tj
+1 0 0 1 36 723 Tm (      version: SHEET_DB_VERSION,) Tj
+1 0 0 1 36 712 Tm (      timestamp: new Date\(\).toISOString\(\),) Tj
+1 0 0 1 36 701 Tm (      details: {) Tj
+1 0 0 1 36 690 Tm (        code: err.code || 'HEALTH_CHECK_FAILED',) Tj
+1 0 0 1 36 679 Tm (        message: err.message || 'Unknown error.') Tj
+1 0 0 1 36 668 Tm (      }) Tj
+1 0 0 1 36 657 Tm (    };) Tj
+1 0 0 1 36 646 Tm (  }) Tj
+1 0 0 1 36 635 Tm (}) Tj
+1 0 0 1 36 624 Tm () Tj
+1 0 0 1 36 613 Tm (/**) Tj
+1 0 0 1 36 602 Tm ( * Creates a client using Script Properties with optional explicit overrides.) Tj
+1 0 0 1 36 591 Tm ( * Precedence: explicit options > script properties > defaults.) Tj
+1 0 0 1 36 580 Tm ( * @param {Object=} options) Tj
+1 0 0 1 36 569 Tm ( * @return {DbClient}) Tj
+1 0 0 1 36 558 Tm ( */) Tj
+1 0 0 1 36 547 Tm (function _sheetDbCreateClientFromScriptProperties\(options\) {) Tj
+1 0 0 1 36 536 Tm (  var merged = mergeClientOptionsWithScriptProperties\(options || {}\);) Tj
+1 0 0 1 36 525 Tm (  return _sheetDbCreateClient\(merged\);) Tj
+1 0 0 1 36 514 Tm (}) Tj
+1 0 0 1 36 503 Tm () Tj
+1 0 0 1 36 492 Tm (/**) Tj
+1 0 0 1 36 481 Tm ( * Public Apps Script library namespace.) Tj
+1 0 0 1 36 470 Tm ( *) Tj
+1 0 0 1 36 459 Tm ( * Consumers should call library exports through this object:) Tj
+1 0 0 1 36 448 Tm ( * `LibraryIdentifier.SheetDb.createClient\(...\)`.) Tj
+1 0 0 1 36 437 Tm ( *) Tj
+1 0 0 1 36 426 Tm ( * @type {{) Tj
+1 0 0 1 36 415 Tm ( *   createClient: function\(Object=\): DbClient,) Tj
+1 0 0 1 36 404 Tm ( *   createClientFromScriptProperties: function\(Object=\): DbClient,) Tj
+1 0 0 1 36 393 Tm ( *   bootstrap: function\(Object=\): DbClient,) Tj
+1 0 0 1 36 382 Tm ( *   healthCheck: function\(\): Object,) Tj
+1 0 0 1 36 371 Tm ( *   version: string) Tj
+1 0 0 1 36 360 Tm ( * }}) Tj
+1 0 0 1 36 349 Tm ( */) Tj
+1 0 0 1 36 338 Tm (var SheetDb = {) Tj
+1 0 0 1 36 327 Tm (  createClient: function\(options\) {) Tj
+1 0 0 1 36 316 Tm (    return _sheetDbCreateClient\(options\);) Tj
+1 0 0 1 36 305 Tm (  },) Tj
+1 0 0 1 36 294 Tm () Tj
+1 0 0 1 36 283 Tm (  createClientFromScriptProperties: function\(options\) {) Tj
+1 0 0 1 36 272 Tm (    return _sheetDbCreateClientFromScriptProperties\(options\);) Tj
+1 0 0 1 36 261 Tm (  },) Tj
+1 0 0 1 36 250 Tm () Tj
+1 0 0 1 36 239 Tm (  bootstrap: function\(options\) {) Tj
+1 0 0 1 36 228 Tm (    return _sheetDbBootstrap\(options\);) Tj
+1 0 0 1 36 217 Tm (  },) Tj
+1 0 0 1 36 206 Tm () Tj
+1 0 0 1 36 195 Tm (  healthCheck: function\(\) {) Tj
+1 0 0 1 36 184 Tm (    return _sheetDbHealthCheck\(\);) Tj
+1 0 0 1 36 173 Tm (  },) Tj
+1 0 0 1 36 162 Tm () Tj
+1 0 0 1 36 151 Tm (  version: SHEET_DB_VERSION) Tj
+1 0 0 1 36 140 Tm (};) Tj
+1 0 0 1 36 129 Tm () Tj
+1 0 0 1 36 118 Tm (/**) Tj
+1 0 0 1 36 107 Tm ( * Backward-compatible factory export.) Tj
+1 0 0 1 36 96 Tm ( * @deprecated Use `SheetDb.createClient` instead.) Tj
+1 0 0 1 36 85 Tm ( * @param {Object=} options) Tj
+1 0 0 1 36 74 Tm ( * @return {DbClient}) Tj
+1 0 0 1 36 63 Tm ( */) Tj
+1 0 0 1 36 52 Tm (function createSheetDbClient\(options\) {) Tj
+1 0 0 1 36 41 Tm (  return SheetDb.createClient\(options\);) Tj
+ET
+endstream
+endobj
+8 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R >> >> /Contents 9 0 R >>
+endobj
+9 0 obj
+<< /Length 3028 >>
+stream
+BT
+/F1 9 Tf
+1 0 0 1 36 756 Tm (}) Tj
+1 0 0 1 36 745 Tm () Tj
+1 0 0 1 36 734 Tm (```) Tj
+1 0 0 1 36 723 Tm () Tj
+1 0 0 1 36 712 Tm () Tj
+1 0 0 1 36 701 Tm (# 01_DbClient.gs) Tj
+1 0 0 1 36 690 Tm () Tj
+1 0 0 1 36 679 Tm (**Source path:** `sheet_db_lib/01_DbClient.gs`) Tj
+1 0 0 1 36 668 Tm () Tj
+1 0 0 1 36 657 Tm (```javascript) Tj
+1 0 0 1 36 646 Tm (/**) Tj
+1 0 0 1 36 635 Tm ( * Main entrypoint for interacting with sheet-backed tables.) Tj
+1 0 0 1 36 624 Tm ( */) Tj
+1 0 0 1 36 613 Tm (class DbClient {) Tj
+1 0 0 1 36 602 Tm (  /**) Tj
+1 0 0 1 36 591 Tm (   * @param {Config=} config) Tj
+1 0 0 1 36 580 Tm (   */) Tj
+1 0 0 1 36 569 Tm (  constructor\(config\) {) Tj
+1 0 0 1 36 558 Tm (    this._config = config || new Config\(\);) Tj
+1 0 0 1 36 547 Tm (    this._schemas = new SchemaRegistry\(\);) Tj
+1 0 0 1 36 536 Tm (    this._sheets = new SheetsGateway\(this._config\);) Tj
+1 0 0 1 36 525 Tm (    this._audit = new AuditLogger\(\);) Tj
+1 0 0 1 36 514 Tm (    this._tx = new TransactionManager\(this._config.lockTimeoutMs\);) Tj
+1 0 0 1 36 503 Tm (  }) Tj
+1 0 0 1 36 492 Tm () Tj
+1 0 0 1 36 481 Tm (  /**) Tj
+1 0 0 1 36 470 Tm (   * Registers a table schema.) Tj
+1 0 0 1 36 459 Tm (   * @param {string} tableName) Tj
+1 0 0 1 36 448 Tm (   * @param {Object} schema) Tj
+1 0 0 1 36 437 Tm (   * @return {DbClient}) Tj
+1 0 0 1 36 426 Tm (   */) Tj
+1 0 0 1 36 415 Tm (  registerTable\(tableName, schema\) {) Tj
+1 0 0 1 36 404 Tm (    this._schemas.register\(tableName, schema\);) Tj
+1 0 0 1 36 393 Tm (    this._sheets.ensureTable\(tableName, schema.columns\);) Tj
+1 0 0 1 36 382 Tm (    return this;) Tj
+1 0 0 1 36 371 Tm (  }) Tj
+1 0 0 1 36 360 Tm () Tj
+1 0 0 1 36 349 Tm (  /**) Tj
+1 0 0 1 36 338 Tm (   * Returns a table repository.) Tj
+1 0 0 1 36 327 Tm (   * @param {string} tableName) Tj
+1 0 0 1 36 316 Tm (   * @return {TableRepository}) Tj
+1 0 0 1 36 305 Tm (   */) Tj
+1 0 0 1 36 294 Tm (  table\(tableName\) {) Tj
+1 0 0 1 36 283 Tm (    this._schemas.get\(tableName\);) Tj
+1 0 0 1 36 272 Tm (    return new TableRepository\() Tj
+1 0 0 1 36 261 Tm (      tableName,) Tj
+1 0 0 1 36 250 Tm (      this._config,) Tj
+1 0 0 1 36 239 Tm (      this._schemas,) Tj
+1 0 0 1 36 228 Tm (      this._sheets,) Tj
+1 0 0 1 36 217 Tm (      this._audit) Tj
+1 0 0 1 36 206 Tm (    \);) Tj
+1 0 0 1 36 195 Tm (  }) Tj
+1 0 0 1 36 184 Tm () Tj
+1 0 0 1 36 173 Tm (  /**) Tj
+1 0 0 1 36 162 Tm (   * Gets or registers a table schema.) Tj
+1 0 0 1 36 151 Tm (   *) Tj
+1 0 0 1 36 140 Tm (   * - When `schema` is provided, registers/overwrites the schema and ensures the table.) Tj
+1 0 0 1 36 129 Tm (   * - When `schema` is omitted, returns the current schema.) Tj
+1 0 0 1 36 118 Tm (   *) Tj
+1 0 0 1 36 107 Tm (   * @param {string} tableName) Tj
+1 0 0 1 36 96 Tm (   * @param {Object=} schema) Tj
+1 0 0 1 36 85 Tm (   * @return {Object|DbClient}) Tj
+1 0 0 1 36 74 Tm (   */) Tj
+1 0 0 1 36 63 Tm (  schema\(tableName, schema\) {) Tj
+1 0 0 1 36 52 Tm (    if \(schema\) {) Tj
+1 0 0 1 36 41 Tm (      this.registerTable\(tableName, schema\);) Tj
+ET
+endstream
+endobj
+10 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R >> >> /Contents 11 0 R >>
+endobj
+11 0 obj
+<< /Length 3377 >>
+stream
+BT
+/F1 9 Tf
+1 0 0 1 36 756 Tm (      return this;) Tj
+1 0 0 1 36 745 Tm (    }) Tj
+1 0 0 1 36 734 Tm (    return this._schemas.get\(tableName\);) Tj
+1 0 0 1 36 723 Tm (  }) Tj
+1 0 0 1 36 712 Tm () Tj
+1 0 0 1 36 701 Tm (  /**) Tj
+1 0 0 1 36 690 Tm (   * Writes an audit entry through the configured audit logger.) Tj
+1 0 0 1 36 679 Tm (   * @param {string} action) Tj
+1 0 0 1 36 668 Tm (   * @param {string} tableName) Tj
+1 0 0 1 36 657 Tm (   * @param {Object=} metadata) Tj
+1 0 0 1 36 646 Tm (   */) Tj
+1 0 0 1 36 635 Tm (  audit\(action, tableName, metadata\) {) Tj
+1 0 0 1 36 624 Tm (    this._audit.log\(action, tableName, metadata || {}\);) Tj
+1 0 0 1 36 613 Tm (  }) Tj
+1 0 0 1 36 602 Tm () Tj
+1 0 0 1 36 591 Tm (  /**) Tj
+1 0 0 1 36 580 Tm (   * Runs a set of operations under lock.) Tj
+1 0 0 1 36 569 Tm (   * @template T) Tj
+1 0 0 1 36 558 Tm (   * @param {function\(DbClient\): T} callback) Tj
+1 0 0 1 36 547 Tm (   * @return {T}) Tj
+1 0 0 1 36 536 Tm (   */) Tj
+1 0 0 1 36 525 Tm (  transaction\(callback\) {) Tj
+1 0 0 1 36 514 Tm (    var self = this;) Tj
+1 0 0 1 36 503 Tm (    return this._tx.run\(function\(\) {) Tj
+1 0 0 1 36 492 Tm (      return callback\(self\);) Tj
+1 0 0 1 36 481 Tm (    }\);) Tj
+1 0 0 1 36 470 Tm (  }) Tj
+1 0 0 1 36 459 Tm (}) Tj
+1 0 0 1 36 448 Tm () Tj
+1 0 0 1 36 437 Tm (```) Tj
+1 0 0 1 36 426 Tm () Tj
+1 0 0 1 36 415 Tm () Tj
+1 0 0 1 36 404 Tm (# 02_Config.gs) Tj
+1 0 0 1 36 393 Tm () Tj
+1 0 0 1 36 382 Tm (**Source path:** `sheet_db_lib/02_Config.gs`) Tj
+1 0 0 1 36 371 Tm () Tj
+1 0 0 1 36 360 Tm (```javascript) Tj
+1 0 0 1 36 349 Tm (/**) Tj
+1 0 0 1 36 338 Tm ( * Immutable runtime configuration for the Sheet DB client.) Tj
+1 0 0 1 36 327 Tm ( */) Tj
+1 0 0 1 36 316 Tm (class Config {) Tj
+1 0 0 1 36 305 Tm (  /**) Tj
+1 0 0 1 36 294 Tm (   * @param {Object=} options) Tj
+1 0 0 1 36 283 Tm (   * @param {string=} options.spreadsheetId Spreadsheet ID; defaults to active spreadsheet.) Tj
+1 0 0 1 36 272 Tm (   * @param {string=} options.idColumn Record primary key column name.) Tj
+1 0 0 1 36 261 Tm (   * @param {string=} options.createdAtColumn Created timestamp column name.) Tj
+1 0 0 1 36 250 Tm (   * @param {string=} options.updatedAtColumn Updated timestamp column name.) Tj
+1 0 0 1 36 239 Tm (   * @param {string=} options.deletedAtColumn Soft-delete timestamp column name.) Tj
+1 0 0 1 36 228 Tm (   * @param {number=} options.lockTimeoutMs Lock acquisition timeout for transactions.) Tj
+1 0 0 1 36 217 Tm (   */) Tj
+1 0 0 1 36 206 Tm (  constructor\(options\) {) Tj
+1 0 0 1 36 195 Tm (    var opts = options || {};) Tj
+1 0 0 1 36 184 Tm (    this.spreadsheetId = opts.spreadsheetId || '';) Tj
+1 0 0 1 36 173 Tm (    this.idColumn = opts.idColumn || 'id';) Tj
+1 0 0 1 36 162 Tm (    this.createdAtColumn = opts.createdAtColumn || 'createdAt';) Tj
+1 0 0 1 36 151 Tm (    this.updatedAtColumn = opts.updatedAtColumn || 'updatedAt';) Tj
+1 0 0 1 36 140 Tm (    this.deletedAtColumn = opts.deletedAtColumn || 'deletedAt';) Tj
+1 0 0 1 36 129 Tm (    this.lockTimeoutMs = Util.isNil\(opts.lockTimeoutMs\) ? 30000 : Number\(opts.lockTimeoutMs\);) Tj
+1 0 0 1 36 118 Tm (    this.validate\(\);) Tj
+1 0 0 1 36 107 Tm (    Object.freeze\(this\);) Tj
+1 0 0 1 36 96 Tm (  }) Tj
+1 0 0 1 36 85 Tm () Tj
+1 0 0 1 36 74 Tm (  /**) Tj
+1 0 0 1 36 63 Tm (   * @return {void}) Tj
+1 0 0 1 36 52 Tm (   */) Tj
+1 0 0 1 36 41 Tm (  validate\(\) {) Tj
+ET
+endstream
+endobj
+12 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R >> >> /Contents 13 0 R >>
+endobj
+13 0 obj
+<< /Length 3019 >>
+stream
+BT
+/F1 9 Tf
+1 0 0 1 36 756 Tm (    var columns = [) Tj
+1 0 0 1 36 745 Tm (      this.idColumn,) Tj
+1 0 0 1 36 734 Tm (      this.createdAtColumn,) Tj
+1 0 0 1 36 723 Tm (      this.updatedAtColumn,) Tj
+1 0 0 1 36 712 Tm (      this.deletedAtColumn) Tj
+1 0 0 1 36 701 Tm (    ];) Tj
+1 0 0 1 36 690 Tm (    var unique = {};) Tj
+1 0 0 1 36 679 Tm (    columns.forEach\(function\(column\) {) Tj
+1 0 0 1 36 668 Tm (      if \(!column || typeof column !== 'string'\) {) Tj
+1 0 0 1 36 657 Tm (        throw new ConfigError\('System column names must be non-empty strings.'\);) Tj
+1 0 0 1 36 646 Tm (      }) Tj
+1 0 0 1 36 635 Tm (      if \(unique[column]\) {) Tj
+1 0 0 1 36 624 Tm (        throw new ConfigError\('System column names must be unique. Duplicate: ' + column\);) Tj
+1 0 0 1 36 613 Tm (      }) Tj
+1 0 0 1 36 602 Tm (      unique[column] = true;) Tj
+1 0 0 1 36 591 Tm (    }\);) Tj
+1 0 0 1 36 580 Tm () Tj
+1 0 0 1 36 569 Tm (    if \(isNaN\(this.lockTimeoutMs\) || this.lockTimeoutMs <= 0\) {) Tj
+1 0 0 1 36 558 Tm (      throw new ConfigError\('lockTimeoutMs must be a positive number.'\);) Tj
+1 0 0 1 36 547 Tm (    }) Tj
+1 0 0 1 36 536 Tm (  }) Tj
+1 0 0 1 36 525 Tm (}) Tj
+1 0 0 1 36 514 Tm () Tj
+1 0 0 1 36 503 Tm (```) Tj
+1 0 0 1 36 492 Tm () Tj
+1 0 0 1 36 481 Tm () Tj
+1 0 0 1 36 470 Tm (# 03_Errors.gs) Tj
+1 0 0 1 36 459 Tm () Tj
+1 0 0 1 36 448 Tm (**Source path:** `sheet_db_lib/03_Errors.gs`) Tj
+1 0 0 1 36 437 Tm () Tj
+1 0 0 1 36 426 Tm (```javascript) Tj
+1 0 0 1 36 415 Tm (/**) Tj
+1 0 0 1 36 404 Tm ( * Base error for the Sheet DB library.) Tj
+1 0 0 1 36 393 Tm ( */) Tj
+1 0 0 1 36 382 Tm (class SheetDbError extends Error {) Tj
+1 0 0 1 36 371 Tm (  /**) Tj
+1 0 0 1 36 360 Tm (   * @param {string} message Human-readable error message.) Tj
+1 0 0 1 36 349 Tm (   * @param {string=} code Stable error code for programmatic handling.) Tj
+1 0 0 1 36 338 Tm (   */) Tj
+1 0 0 1 36 327 Tm (  constructor\(message, code\) {) Tj
+1 0 0 1 36 316 Tm (    super\(message\);) Tj
+1 0 0 1 36 305 Tm (    this.name = this.constructor.name;) Tj
+1 0 0 1 36 294 Tm (    this.code = code || 'SHEET_DB_ERROR';) Tj
+1 0 0 1 36 283 Tm (  }) Tj
+1 0 0 1 36 272 Tm (}) Tj
+1 0 0 1 36 261 Tm () Tj
+1 0 0 1 36 250 Tm (/**) Tj
+1 0 0 1 36 239 Tm ( * Raised when configuration is invalid or missing.) Tj
+1 0 0 1 36 228 Tm ( */) Tj
+1 0 0 1 36 217 Tm (class ConfigError extends SheetDbError {) Tj
+1 0 0 1 36 206 Tm (  /**) Tj
+1 0 0 1 36 195 Tm (   * @param {string} message) Tj
+1 0 0 1 36 184 Tm (   */) Tj
+1 0 0 1 36 173 Tm (  constructor\(message\) {) Tj
+1 0 0 1 36 162 Tm (    super\(message, 'CONFIG_ERROR'\);) Tj
+1 0 0 1 36 151 Tm (  }) Tj
+1 0 0 1 36 140 Tm (}) Tj
+1 0 0 1 36 129 Tm () Tj
+1 0 0 1 36 118 Tm (/**) Tj
+1 0 0 1 36 107 Tm ( * Raised when schema definitions are invalid.) Tj
+1 0 0 1 36 96 Tm ( */) Tj
+1 0 0 1 36 85 Tm (class SchemaError extends SheetDbError {) Tj
+1 0 0 1 36 74 Tm (  /**) Tj
+1 0 0 1 36 63 Tm (   * @param {string} message) Tj
+1 0 0 1 36 52 Tm (   */) Tj
+1 0 0 1 36 41 Tm (  constructor\(message\) {) Tj
+ET
+endstream
+endobj
+14 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R >> >> /Contents 15 0 R >>
+endobj
+15 0 obj
+<< /Length 2651 >>
+stream
+BT
+/F1 9 Tf
+1 0 0 1 36 756 Tm (    super\(message, 'SCHEMA_ERROR'\);) Tj
+1 0 0 1 36 745 Tm (  }) Tj
+1 0 0 1 36 734 Tm (}) Tj
+1 0 0 1 36 723 Tm () Tj
+1 0 0 1 36 712 Tm (/**) Tj
+1 0 0 1 36 701 Tm ( * Raised when records fail validation.) Tj
+1 0 0 1 36 690 Tm ( */) Tj
+1 0 0 1 36 679 Tm (class ValidationError extends SheetDbError {) Tj
+1 0 0 1 36 668 Tm (  /**) Tj
+1 0 0 1 36 657 Tm (   * @param {string} message) Tj
+1 0 0 1 36 646 Tm (   */) Tj
+1 0 0 1 36 635 Tm (  constructor\(message\) {) Tj
+1 0 0 1 36 624 Tm (    super\(message, 'VALIDATION_ERROR'\);) Tj
+1 0 0 1 36 613 Tm (  }) Tj
+1 0 0 1 36 602 Tm (}) Tj
+1 0 0 1 36 591 Tm () Tj
+1 0 0 1 36 580 Tm (/**) Tj
+1 0 0 1 36 569 Tm ( * Raised when underlying sheet operations fail.) Tj
+1 0 0 1 36 558 Tm ( */) Tj
+1 0 0 1 36 547 Tm (class StorageError extends SheetDbError {) Tj
+1 0 0 1 36 536 Tm (  /**) Tj
+1 0 0 1 36 525 Tm (   * @param {string} message) Tj
+1 0 0 1 36 514 Tm (   */) Tj
+1 0 0 1 36 503 Tm (  constructor\(message\) {) Tj
+1 0 0 1 36 492 Tm (    super\(message, 'STORAGE_ERROR'\);) Tj
+1 0 0 1 36 481 Tm (  }) Tj
+1 0 0 1 36 470 Tm (}) Tj
+1 0 0 1 36 459 Tm () Tj
+1 0 0 1 36 448 Tm (/**) Tj
+1 0 0 1 36 437 Tm ( * Raised for optimistic transaction failures.) Tj
+1 0 0 1 36 426 Tm ( */) Tj
+1 0 0 1 36 415 Tm (class TransactionError extends SheetDbError {) Tj
+1 0 0 1 36 404 Tm (  /**) Tj
+1 0 0 1 36 393 Tm (   * @param {string} message) Tj
+1 0 0 1 36 382 Tm (   */) Tj
+1 0 0 1 36 371 Tm (  constructor\(message\) {) Tj
+1 0 0 1 36 360 Tm (    super\(message, 'TRANSACTION_ERROR'\);) Tj
+1 0 0 1 36 349 Tm (  }) Tj
+1 0 0 1 36 338 Tm (}) Tj
+1 0 0 1 36 327 Tm () Tj
+1 0 0 1 36 316 Tm (```) Tj
+1 0 0 1 36 305 Tm () Tj
+1 0 0 1 36 294 Tm () Tj
+1 0 0 1 36 283 Tm (# 04_Util.gs) Tj
+1 0 0 1 36 272 Tm () Tj
+1 0 0 1 36 261 Tm (**Source path:** `sheet_db_lib/04_Util.gs`) Tj
+1 0 0 1 36 250 Tm () Tj
+1 0 0 1 36 239 Tm (```javascript) Tj
+1 0 0 1 36 228 Tm (/**) Tj
+1 0 0 1 36 217 Tm ( * Utility helpers for Sheet DB.) Tj
+1 0 0 1 36 206 Tm ( */) Tj
+1 0 0 1 36 195 Tm (class Util {) Tj
+1 0 0 1 36 184 Tm (  /**) Tj
+1 0 0 1 36 173 Tm (   * @return {string} RFC3339 timestamp in UTC.) Tj
+1 0 0 1 36 162 Tm (   */) Tj
+1 0 0 1 36 151 Tm (  static nowIso\(\) {) Tj
+1 0 0 1 36 140 Tm (    return new Date\(\).toISOString\(\);) Tj
+1 0 0 1 36 129 Tm (  }) Tj
+1 0 0 1 36 118 Tm () Tj
+1 0 0 1 36 107 Tm (  /**) Tj
+1 0 0 1 36 96 Tm (   * Creates a shallow clone of an object.) Tj
+1 0 0 1 36 85 Tm (   * @param {Object} source) Tj
+1 0 0 1 36 74 Tm (   * @return {Object}) Tj
+1 0 0 1 36 63 Tm (   */) Tj
+1 0 0 1 36 52 Tm (  static clone\(source\) {) Tj
+1 0 0 1 36 41 Tm (    return Object.assign\({}, source || {}\);) Tj
+ET
+endstream
+endobj
+16 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R >> >> /Contents 17 0 R >>
+endobj
+17 0 obj
+<< /Length 3040 >>
+stream
+BT
+/F1 9 Tf
+1 0 0 1 36 756 Tm (  }) Tj
+1 0 0 1 36 745 Tm () Tj
+1 0 0 1 36 734 Tm (  /**) Tj
+1 0 0 1 36 723 Tm (   * Creates a stable row ID with a prefix.) Tj
+1 0 0 1 36 712 Tm (   * @param {string=} prefix) Tj
+1 0 0 1 36 701 Tm (   * @return {string}) Tj
+1 0 0 1 36 690 Tm (   */) Tj
+1 0 0 1 36 679 Tm (  static generateId\(prefix\) {) Tj
+1 0 0 1 36 668 Tm (    var p = prefix || 'row';) Tj
+1 0 0 1 36 657 Tm (    var random = Math.random\(\).toString\(36\).slice\(2, 10\);) Tj
+1 0 0 1 36 646 Tm (    return p + '_' + new Date\(\).getTime\(\) + '_' + random;) Tj
+1 0 0 1 36 635 Tm (  }) Tj
+1 0 0 1 36 624 Tm () Tj
+1 0 0 1 36 613 Tm (  /**) Tj
+1 0 0 1 36 602 Tm (   * Returns true when value is null or undefined.) Tj
+1 0 0 1 36 591 Tm (   * @param {*} value) Tj
+1 0 0 1 36 580 Tm (   * @return {boolean}) Tj
+1 0 0 1 36 569 Tm (   */) Tj
+1 0 0 1 36 558 Tm (  static isNil\(value\) {) Tj
+1 0 0 1 36 547 Tm (    return value === null || value === undefined;) Tj
+1 0 0 1 36 536 Tm (  }) Tj
+1 0 0 1 36 525 Tm () Tj
+1 0 0 1 36 514 Tm (  /**) Tj
+1 0 0 1 36 503 Tm (   * Returns true when value is empty string, null, or undefined.) Tj
+1 0 0 1 36 492 Tm (   * @param {*} value) Tj
+1 0 0 1 36 481 Tm (   * @return {boolean}) Tj
+1 0 0 1 36 470 Tm (   */) Tj
+1 0 0 1 36 459 Tm (  static isBlank\(value\) {) Tj
+1 0 0 1 36 448 Tm (    return value === '' || Util.isNil\(value\);) Tj
+1 0 0 1 36 437 Tm (  }) Tj
+1 0 0 1 36 426 Tm () Tj
+1 0 0 1 36 415 Tm (  /**) Tj
+1 0 0 1 36 404 Tm (   * Throws when a required condition is not met.) Tj
+1 0 0 1 36 393 Tm (   * @param {boolean} condition) Tj
+1 0 0 1 36 382 Tm (   * @param {string} message) Tj
+1 0 0 1 36 371 Tm (   */) Tj
+1 0 0 1 36 360 Tm (  static assert\(condition, message\) {) Tj
+1 0 0 1 36 349 Tm (    if \(!condition\) {) Tj
+1 0 0 1 36 338 Tm (      throw new ValidationError\(message\);) Tj
+1 0 0 1 36 327 Tm (    }) Tj
+1 0 0 1 36 316 Tm (  }) Tj
+1 0 0 1 36 305 Tm () Tj
+1 0 0 1 36 294 Tm (  /**) Tj
+1 0 0 1 36 283 Tm (   * Converts a sheet row to an object using the header order.) Tj
+1 0 0 1 36 272 Tm (   * @param {string[]} headers) Tj
+1 0 0 1 36 261 Tm (   * @param {Array<*>} row) Tj
+1 0 0 1 36 250 Tm (   * @return {Object}) Tj
+1 0 0 1 36 239 Tm (   */) Tj
+1 0 0 1 36 228 Tm (  static rowToObject\(headers, row\) {) Tj
+1 0 0 1 36 217 Tm (    var out = {};) Tj
+1 0 0 1 36 206 Tm (    for \(var i = 0; i < headers.length; i++\) {) Tj
+1 0 0 1 36 195 Tm (      out[headers[i]] = row[i];) Tj
+1 0 0 1 36 184 Tm (    }) Tj
+1 0 0 1 36 173 Tm (    return out;) Tj
+1 0 0 1 36 162 Tm (  }) Tj
+1 0 0 1 36 151 Tm () Tj
+1 0 0 1 36 140 Tm (  /**) Tj
+1 0 0 1 36 129 Tm (   * Converts an object to row array by header order.) Tj
+1 0 0 1 36 118 Tm (   * @param {string[]} headers) Tj
+1 0 0 1 36 107 Tm (   * @param {Object} obj) Tj
+1 0 0 1 36 96 Tm (   * @return {Array<*>}) Tj
+1 0 0 1 36 85 Tm (   */) Tj
+1 0 0 1 36 74 Tm (  static objectToRow\(headers, obj\) {) Tj
+1 0 0 1 36 63 Tm (    return headers.map\(function\(h\) {) Tj
+1 0 0 1 36 52 Tm (      return obj[h];) Tj
+1 0 0 1 36 41 Tm (    }\);) Tj
+ET
+endstream
+endobj
+18 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R >> >> /Contents 19 0 R >>
+endobj
+19 0 obj
+<< /Length 3291 >>
+stream
+BT
+/F1 9 Tf
+1 0 0 1 36 756 Tm (  }) Tj
+1 0 0 1 36 745 Tm (}) Tj
+1 0 0 1 36 734 Tm () Tj
+1 0 0 1 36 723 Tm (```) Tj
+1 0 0 1 36 712 Tm () Tj
+1 0 0 1 36 701 Tm () Tj
+1 0 0 1 36 690 Tm (# 05_SchemaRegistry.gs) Tj
+1 0 0 1 36 679 Tm () Tj
+1 0 0 1 36 668 Tm (**Source path:** `sheet_db_lib/05_SchemaRegistry.gs`) Tj
+1 0 0 1 36 657 Tm () Tj
+1 0 0 1 36 646 Tm (```javascript) Tj
+1 0 0 1 36 635 Tm (/**) Tj
+1 0 0 1 36 624 Tm ( * Holds table schemas and applies field defaults/validation.) Tj
+1 0 0 1 36 613 Tm ( */) Tj
+1 0 0 1 36 602 Tm (class SchemaRegistry {) Tj
+1 0 0 1 36 591 Tm (  /**) Tj
+1 0 0 1 36 580 Tm (   * Creates a new in-memory schema registry.) Tj
+1 0 0 1 36 569 Tm (   */) Tj
+1 0 0 1 36 558 Tm (  constructor\(\) {) Tj
+1 0 0 1 36 547 Tm (    this._schemas = {};) Tj
+1 0 0 1 36 536 Tm (  }) Tj
+1 0 0 1 36 525 Tm () Tj
+1 0 0 1 36 514 Tm (  /**) Tj
+1 0 0 1 36 503 Tm (   * Registers a table schema.) Tj
+1 0 0 1 36 492 Tm (   * @param {string} tableName) Tj
+1 0 0 1 36 481 Tm (   * @param {Object} schema) Tj
+1 0 0 1 36 470 Tm (   * @param {Array<string>} schema.columns Ordered columns for persistence.) Tj
+1 0 0 1 36 459 Tm (   * @param {Object<string, Object>=} schema.fields Optional field constraints.) Tj
+1 0 0 1 36 448 Tm (   * @return {SchemaRegistry}) Tj
+1 0 0 1 36 437 Tm (   */) Tj
+1 0 0 1 36 426 Tm (  register\(tableName, schema\) {) Tj
+1 0 0 1 36 415 Tm (    if \(!tableName\) {) Tj
+1 0 0 1 36 404 Tm (      throw new SchemaError\('Table name is required.'\);) Tj
+1 0 0 1 36 393 Tm (    }) Tj
+1 0 0 1 36 382 Tm (    if \(!schema || !Array.isArray\(schema.columns\) || schema.columns.length === 0\) {) Tj
+1 0 0 1 36 371 Tm (      throw new SchemaError\('Schema for ' + tableName + ' must provide non-empty columns array.'\);) Tj
+1 0 0 1 36 360 Tm (    }) Tj
+1 0 0 1 36 349 Tm (    var seen = {};) Tj
+1 0 0 1 36 338 Tm (    schema.columns.forEach\(function\(column\) {) Tj
+1 0 0 1 36 327 Tm (      if \(!column || typeof column !== 'string'\) {) Tj
+1 0 0 1 36 316 Tm (        throw new SchemaError\('All columns must be non-empty strings for table: ' + tableName\);) Tj
+1 0 0 1 36 305 Tm (      }) Tj
+1 0 0 1 36 294 Tm (      if \(seen[column]\) {) Tj
+1 0 0 1 36 283 Tm (        throw new SchemaError\('Duplicate column "' + column + '" in table: ' + tableName\);) Tj
+1 0 0 1 36 272 Tm (      }) Tj
+1 0 0 1 36 261 Tm (      seen[column] = true;) Tj
+1 0 0 1 36 250 Tm (    }\);) Tj
+1 0 0 1 36 239 Tm () Tj
+1 0 0 1 36 228 Tm (    var fields = Util.clone\(schema.fields || {}\);) Tj
+1 0 0 1 36 217 Tm (    Object.keys\(fields\).forEach\(function\(fieldName\) {) Tj
+1 0 0 1 36 206 Tm (      if \(!seen[fieldName]\) {) Tj
+1 0 0 1 36 195 Tm (        throw new SchemaError\() Tj
+1 0 0 1 36 184 Tm (          'Field rules defined for unknown column "' + fieldName + '" in table: ' + tableName) Tj
+1 0 0 1 36 173 Tm (        \);) Tj
+1 0 0 1 36 162 Tm (      }) Tj
+1 0 0 1 36 151 Tm (    }\);) Tj
+1 0 0 1 36 140 Tm () Tj
+1 0 0 1 36 129 Tm (    this._schemas[tableName] = {) Tj
+1 0 0 1 36 118 Tm (      columns: schema.columns.slice\(\),) Tj
+1 0 0 1 36 107 Tm (      fields: fields) Tj
+1 0 0 1 36 96 Tm (    };) Tj
+1 0 0 1 36 85 Tm (    return this;) Tj
+1 0 0 1 36 74 Tm (  }) Tj
+1 0 0 1 36 63 Tm () Tj
+1 0 0 1 36 52 Tm (  /**) Tj
+1 0 0 1 36 41 Tm (   * Returns schema for a table.) Tj
+ET
+endstream
+endobj
+20 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R >> >> /Contents 21 0 R >>
+endobj
+21 0 obj
+<< /Length 3373 >>
+stream
+BT
+/F1 9 Tf
+1 0 0 1 36 756 Tm (   * @param {string} tableName) Tj
+1 0 0 1 36 745 Tm (   * @return {Object}) Tj
+1 0 0 1 36 734 Tm (   */) Tj
+1 0 0 1 36 723 Tm (  get\(tableName\) {) Tj
+1 0 0 1 36 712 Tm (    var schema = this._schemas[tableName];) Tj
+1 0 0 1 36 701 Tm (    if \(!schema\) {) Tj
+1 0 0 1 36 690 Tm (      throw new SchemaError\('No schema registered for table: ' + tableName\);) Tj
+1 0 0 1 36 679 Tm (    }) Tj
+1 0 0 1 36 668 Tm (    return {) Tj
+1 0 0 1 36 657 Tm (      columns: schema.columns.slice\(\),) Tj
+1 0 0 1 36 646 Tm (      fields: Util.clone\(schema.fields\)) Tj
+1 0 0 1 36 635 Tm (    };) Tj
+1 0 0 1 36 624 Tm (  }) Tj
+1 0 0 1 36 613 Tm () Tj
+1 0 0 1 36 602 Tm (  /**) Tj
+1 0 0 1 36 591 Tm (   * Validates and normalizes a record.) Tj
+1 0 0 1 36 580 Tm (   * @param {string} tableName) Tj
+1 0 0 1 36 569 Tm (   * @param {Object} record) Tj
+1 0 0 1 36 558 Tm (   * @param {boolean=} isPartial True for patch-like updates.) Tj
+1 0 0 1 36 547 Tm (   * @return {Object}) Tj
+1 0 0 1 36 536 Tm (   */) Tj
+1 0 0 1 36 525 Tm (  normalizeRecord\(tableName, record, isPartial\) {) Tj
+1 0 0 1 36 514 Tm (    var schema = this.get\(tableName\);) Tj
+1 0 0 1 36 503 Tm (    var out = Util.clone\(record || {}\);) Tj
+1 0 0 1 36 492 Tm (    schema.columns.forEach\(function\(column\) {) Tj
+1 0 0 1 36 481 Tm (      var fieldRules = schema.fields[column] || {};) Tj
+1 0 0 1 36 470 Tm (      var hasValue = !Util.isNil\(out[column]\);) Tj
+1 0 0 1 36 459 Tm () Tj
+1 0 0 1 36 448 Tm (      if \(!hasValue && fieldRules.hasOwnProperty\('default'\)\) {) Tj
+1 0 0 1 36 437 Tm (        var defaultValue = fieldRules.default;) Tj
+1 0 0 1 36 426 Tm (        out[column] = typeof defaultValue === 'function' ? defaultValue\(\) : defaultValue;) Tj
+1 0 0 1 36 415 Tm (      }) Tj
+1 0 0 1 36 404 Tm () Tj
+1 0 0 1 36 393 Tm (      if \(!isPartial && fieldRules.required && Util.isNil\(out[column]\)\) {) Tj
+1 0 0 1 36 382 Tm (        throw new ValidationError\('Field "' + column + '" is required.'\);) Tj
+1 0 0 1 36 371 Tm (      }) Tj
+1 0 0 1 36 360 Tm () Tj
+1 0 0 1 36 349 Tm (      if \(!Util.isNil\(out[column]\) && fieldRules.type\) {) Tj
+1 0 0 1 36 338 Tm (        var expected = fieldRules.type;) Tj
+1 0 0 1 36 327 Tm (        var actual = Object.prototype.toString.call\(out[column]\).slice\(8, -1\).toLowerCase\(\);) Tj
+1 0 0 1 36 316 Tm (        if \(actual !== expected.toLowerCase\(\)\) {) Tj
+1 0 0 1 36 305 Tm (          throw new ValidationError\() Tj
+1 0 0 1 36 294 Tm (            'Field "' + column + '" expected type ' + expected + ' but got ' + actual + '.') Tj
+1 0 0 1 36 283 Tm (          \);) Tj
+1 0 0 1 36 272 Tm (        }) Tj
+1 0 0 1 36 261 Tm (      }) Tj
+1 0 0 1 36 250 Tm (    }\);) Tj
+1 0 0 1 36 239 Tm () Tj
+1 0 0 1 36 228 Tm (    return out;) Tj
+1 0 0 1 36 217 Tm (  }) Tj
+1 0 0 1 36 206 Tm (}) Tj
+1 0 0 1 36 195 Tm () Tj
+1 0 0 1 36 184 Tm (```) Tj
+1 0 0 1 36 173 Tm () Tj
+1 0 0 1 36 162 Tm () Tj
+1 0 0 1 36 151 Tm (# 06_SheetsGateway.gs) Tj
+1 0 0 1 36 140 Tm () Tj
+1 0 0 1 36 129 Tm (**Source path:** `sheet_db_lib/06_SheetsGateway.gs`) Tj
+1 0 0 1 36 118 Tm () Tj
+1 0 0 1 36 107 Tm (```javascript) Tj
+1 0 0 1 36 96 Tm (/**) Tj
+1 0 0 1 36 85 Tm ( * Thin wrapper around SpreadsheetApp APIs.) Tj
+1 0 0 1 36 74 Tm ( */) Tj
+1 0 0 1 36 63 Tm (class SheetsGateway {) Tj
+1 0 0 1 36 52 Tm (  /**) Tj
+1 0 0 1 36 41 Tm (   * @param {Config} config) Tj
+ET
+endstream
+endobj
+22 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R >> >> /Contents 23 0 R >>
+endobj
+23 0 obj
+<< /Length 3432 >>
+stream
+BT
+/F1 9 Tf
+1 0 0 1 36 756 Tm (   */) Tj
+1 0 0 1 36 745 Tm (  constructor\(config\) {) Tj
+1 0 0 1 36 734 Tm (    this._config = config;) Tj
+1 0 0 1 36 723 Tm (  }) Tj
+1 0 0 1 36 712 Tm () Tj
+1 0 0 1 36 701 Tm (  /**) Tj
+1 0 0 1 36 690 Tm (   * @return {GoogleAppsScript.Spreadsheet.Spreadsheet}) Tj
+1 0 0 1 36 679 Tm (   */) Tj
+1 0 0 1 36 668 Tm (  getSpreadsheet\(\) {) Tj
+1 0 0 1 36 657 Tm (    if \(this._config.spreadsheetId\) {) Tj
+1 0 0 1 36 646 Tm (      return SpreadsheetApp.openById\(this._config.spreadsheetId\);) Tj
+1 0 0 1 36 635 Tm (    }) Tj
+1 0 0 1 36 624 Tm (    return SpreadsheetApp.getActiveSpreadsheet\(\);) Tj
+1 0 0 1 36 613 Tm (  }) Tj
+1 0 0 1 36 602 Tm () Tj
+1 0 0 1 36 591 Tm (  /**) Tj
+1 0 0 1 36 580 Tm (   * @param {string} tableName) Tj
+1 0 0 1 36 569 Tm (   * @param {boolean=} createWhenMissing) Tj
+1 0 0 1 36 558 Tm (   * @return {GoogleAppsScript.Spreadsheet.Sheet}) Tj
+1 0 0 1 36 547 Tm (   */) Tj
+1 0 0 1 36 536 Tm (  getSheet\(tableName, createWhenMissing\) {) Tj
+1 0 0 1 36 525 Tm (    var ss = this.getSpreadsheet\(\);) Tj
+1 0 0 1 36 514 Tm (    var sheet = ss.getSheetByName\(tableName\);) Tj
+1 0 0 1 36 503 Tm (    if \(!sheet && createWhenMissing\) {) Tj
+1 0 0 1 36 492 Tm (      sheet = ss.insertSheet\(tableName\);) Tj
+1 0 0 1 36 481 Tm (    }) Tj
+1 0 0 1 36 470 Tm (    if \(!sheet\) {) Tj
+1 0 0 1 36 459 Tm (      throw new StorageError\('Sheet not found for table: ' + tableName\);) Tj
+1 0 0 1 36 448 Tm (    }) Tj
+1 0 0 1 36 437 Tm (    return sheet;) Tj
+1 0 0 1 36 426 Tm (  }) Tj
+1 0 0 1 36 415 Tm () Tj
+1 0 0 1 36 404 Tm (  /**) Tj
+1 0 0 1 36 393 Tm (   * @param {string} tableName) Tj
+1 0 0 1 36 382 Tm (   * @return {{headers: string[], rows: Array<Array<*>>}}) Tj
+1 0 0 1 36 371 Tm (   */) Tj
+1 0 0 1 36 360 Tm (  readTable\(tableName\) {) Tj
+1 0 0 1 36 349 Tm (    var sheet = this.getSheet\(tableName, false\);) Tj
+1 0 0 1 36 338 Tm (    var range = sheet.getDataRange\(\);) Tj
+1 0 0 1 36 327 Tm (    var values = range.getValues\(\);) Tj
+1 0 0 1 36 316 Tm (    if \(values.length === 0\) {) Tj
+1 0 0 1 36 305 Tm (      return { headers: [], rows: [] };) Tj
+1 0 0 1 36 294 Tm (    }) Tj
+1 0 0 1 36 283 Tm (    return {) Tj
+1 0 0 1 36 272 Tm (      headers: values[0],) Tj
+1 0 0 1 36 261 Tm (      rows: values.slice\(1\)) Tj
+1 0 0 1 36 250 Tm (    };) Tj
+1 0 0 1 36 239 Tm (  }) Tj
+1 0 0 1 36 228 Tm () Tj
+1 0 0 1 36 217 Tm (  /**) Tj
+1 0 0 1 36 206 Tm (   * Ensures table exists with given headers.) Tj
+1 0 0 1 36 195 Tm (   * @param {string} tableName) Tj
+1 0 0 1 36 184 Tm (   * @param {string[]} headers) Tj
+1 0 0 1 36 173 Tm (   */) Tj
+1 0 0 1 36 162 Tm (  ensureTable\(tableName, headers\) {) Tj
+1 0 0 1 36 151 Tm (    var sheet = this.getSheet\(tableName, true\);) Tj
+1 0 0 1 36 140 Tm (    var lastRow = sheet.getLastRow\(\);) Tj
+1 0 0 1 36 129 Tm (    if \(lastRow === 0\) {) Tj
+1 0 0 1 36 118 Tm (      sheet.getRange\(1, 1, 1, headers.length\).setValues\([headers]\);) Tj
+1 0 0 1 36 107 Tm (      return;) Tj
+1 0 0 1 36 96 Tm (    }) Tj
+1 0 0 1 36 85 Tm () Tj
+1 0 0 1 36 74 Tm (    var existingHeaders = sheet.getRange\(1, 1, 1, sheet.getLastColumn\(\)\).getValues\(\)[0]) Tj
+1 0 0 1 36 63 Tm (      .map\(function\(value\) { return String\(value\); }\);) Tj
+1 0 0 1 36 52 Tm (    var expectedHeaders = headers.map\(function\(value\) { return String\(value\); }\);) Tj
+1 0 0 1 36 41 Tm (    if \(existingHeaders.join\('|'\) !== expectedHeaders.join\('|'\)\) {) Tj
+ET
+endstream
+endobj
+24 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R >> >> /Contents 25 0 R >>
+endobj
+25 0 obj
+<< /Length 3442 >>
+stream
+BT
+/F1 9 Tf
+1 0 0 1 36 756 Tm (      throw new StorageError\('Header mismatch for table: ' + tableName\);) Tj
+1 0 0 1 36 745 Tm (    }) Tj
+1 0 0 1 36 734 Tm (  }) Tj
+1 0 0 1 36 723 Tm () Tj
+1 0 0 1 36 712 Tm (  /**) Tj
+1 0 0 1 36 701 Tm (   * Writes all rows for a table, replacing existing body rows.) Tj
+1 0 0 1 36 690 Tm (   * @param {string} tableName) Tj
+1 0 0 1 36 679 Tm (   * @param {string[]} headers) Tj
+1 0 0 1 36 668 Tm (   * @param {Array<Array<*>>} rows) Tj
+1 0 0 1 36 657 Tm (   */) Tj
+1 0 0 1 36 646 Tm (  writeAllRows\(tableName, headers, rows\) {) Tj
+1 0 0 1 36 635 Tm (    var sheet = this.getSheet\(tableName, true\);) Tj
+1 0 0 1 36 624 Tm (    this.ensureTable\(tableName, headers\);) Tj
+1 0 0 1 36 613 Tm () Tj
+1 0 0 1 36 602 Tm (    var maxRows = Math.max\(sheet.getMaxRows\(\), rows.length + 1\);) Tj
+1 0 0 1 36 591 Tm (    if \(sheet.getMaxRows\(\) < maxRows\) {) Tj
+1 0 0 1 36 580 Tm (      sheet.insertRowsAfter\(sheet.getMaxRows\(\), maxRows - sheet.getMaxRows\(\)\);) Tj
+1 0 0 1 36 569 Tm (    }) Tj
+1 0 0 1 36 558 Tm () Tj
+1 0 0 1 36 547 Tm (    if \(sheet.getLastRow\(\) > 1\) {) Tj
+1 0 0 1 36 536 Tm (      sheet.getRange\(2, 1, sheet.getLastRow\(\) - 1, headers.length\).clearContent\(\);) Tj
+1 0 0 1 36 525 Tm (    }) Tj
+1 0 0 1 36 514 Tm () Tj
+1 0 0 1 36 503 Tm (    if \(rows.length > 0\) {) Tj
+1 0 0 1 36 492 Tm (      sheet.getRange\(2, 1, rows.length, headers.length\).setValues\(rows\);) Tj
+1 0 0 1 36 481 Tm (    }) Tj
+1 0 0 1 36 470 Tm (  }) Tj
+1 0 0 1 36 459 Tm (}) Tj
+1 0 0 1 36 448 Tm () Tj
+1 0 0 1 36 437 Tm (```) Tj
+1 0 0 1 36 426 Tm () Tj
+1 0 0 1 36 415 Tm () Tj
+1 0 0 1 36 404 Tm (# 07_TableRepository.gs) Tj
+1 0 0 1 36 393 Tm () Tj
+1 0 0 1 36 382 Tm (**Source path:** `sheet_db_lib/07_TableRepository.gs`) Tj
+1 0 0 1 36 371 Tm () Tj
+1 0 0 1 36 360 Tm (```javascript) Tj
+1 0 0 1 36 349 Tm (/**) Tj
+1 0 0 1 36 338 Tm ( * CRUD repository for a specific table.) Tj
+1 0 0 1 36 327 Tm ( */) Tj
+1 0 0 1 36 316 Tm (class TableRepository {) Tj
+1 0 0 1 36 305 Tm (  /**) Tj
+1 0 0 1 36 294 Tm (   * @param {string} tableName) Tj
+1 0 0 1 36 283 Tm (   * @param {Config} config) Tj
+1 0 0 1 36 272 Tm (   * @param {SchemaRegistry} schemaRegistry) Tj
+1 0 0 1 36 261 Tm (   * @param {SheetsGateway} sheetsGateway) Tj
+1 0 0 1 36 250 Tm (   * @param {AuditLogger} auditLogger) Tj
+1 0 0 1 36 239 Tm (   */) Tj
+1 0 0 1 36 228 Tm (  constructor\(tableName, config, schemaRegistry, sheetsGateway, auditLogger\) {) Tj
+1 0 0 1 36 217 Tm (    this._tableName = tableName;) Tj
+1 0 0 1 36 206 Tm (    this._config = config;) Tj
+1 0 0 1 36 195 Tm (    this._schemas = schemaRegistry;) Tj
+1 0 0 1 36 184 Tm (    this._sheets = sheetsGateway;) Tj
+1 0 0 1 36 173 Tm (    this._audit = auditLogger;) Tj
+1 0 0 1 36 162 Tm (  }) Tj
+1 0 0 1 36 151 Tm () Tj
+1 0 0 1 36 140 Tm (  /**) Tj
+1 0 0 1 36 129 Tm (   * @return {Array<Object>}) Tj
+1 0 0 1 36 118 Tm (   */) Tj
+1 0 0 1 36 107 Tm (  findAll\(\) {) Tj
+1 0 0 1 36 96 Tm (    var schema = this._schemas.get\(this._tableName\);) Tj
+1 0 0 1 36 85 Tm (    this._sheets.ensureTable\(this._tableName, schema.columns\);) Tj
+1 0 0 1 36 74 Tm (    var data = this._sheets.readTable\(this._tableName\);) Tj
+1 0 0 1 36 63 Tm (    return data.rows) Tj
+1 0 0 1 36 52 Tm (      .map\(function\(row\) { return Util.rowToObject\(data.headers, row\); }\)) Tj
+1 0 0 1 36 41 Tm (      .filter\(function\(record\) { return Util.isBlank\(record[this._config.deletedAtColumn]\); }, this\);) Tj
+ET
+endstream
+endobj
+26 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R >> >> /Contents 27 0 R >>
+endobj
+27 0 obj
+<< /Length 4053 >>
+stream
+BT
+/F1 9 Tf
+1 0 0 1 36 756 Tm (  }) Tj
+1 0 0 1 36 745 Tm () Tj
+1 0 0 1 36 734 Tm (  /**) Tj
+1 0 0 1 36 723 Tm (   * @param {string} id) Tj
+1 0 0 1 36 712 Tm (   * @return {Object|null}) Tj
+1 0 0 1 36 701 Tm (   */) Tj
+1 0 0 1 36 690 Tm (  findById\(id\) {) Tj
+1 0 0 1 36 679 Tm (    var rows = this.findAll\(\);) Tj
+1 0 0 1 36 668 Tm (    for \(var i = 0; i < rows.length; i++\) {) Tj
+1 0 0 1 36 657 Tm (      if \(rows[i][this._config.idColumn] === id\) {) Tj
+1 0 0 1 36 646 Tm (        return rows[i];) Tj
+1 0 0 1 36 635 Tm (      }) Tj
+1 0 0 1 36 624 Tm (    }) Tj
+1 0 0 1 36 613 Tm (    return null;) Tj
+1 0 0 1 36 602 Tm (  }) Tj
+1 0 0 1 36 591 Tm () Tj
+1 0 0 1 36 580 Tm (  /**) Tj
+1 0 0 1 36 569 Tm (   * @param {Object} payload) Tj
+1 0 0 1 36 558 Tm (   * @return {Object}) Tj
+1 0 0 1 36 547 Tm (   */) Tj
+1 0 0 1 36 536 Tm (  insert\(payload\) {) Tj
+1 0 0 1 36 525 Tm (    var schema = this._schemas.get\(this._tableName\);) Tj
+1 0 0 1 36 514 Tm (    this._sheets.ensureTable\(this._tableName, schema.columns\);) Tj
+1 0 0 1 36 503 Tm (    var record = this._schemas.normalizeRecord\(this._tableName, payload, false\);) Tj
+1 0 0 1 36 492 Tm (    var now = Util.nowIso\(\);) Tj
+1 0 0 1 36 481 Tm (    record[this._config.idColumn] = record[this._config.idColumn] || Util.generateId\(this._tableName\);) Tj
+1 0 0 1 36 470 Tm (    record[this._config.createdAtColumn] = record[this._config.createdAtColumn] || now;) Tj
+1 0 0 1 36 459 Tm (    record[this._config.updatedAtColumn] = now;) Tj
+1 0 0 1 36 448 Tm (    if \(!record.hasOwnProperty\(this._config.deletedAtColumn\)\) {) Tj
+1 0 0 1 36 437 Tm (      record[this._config.deletedAtColumn] = '';) Tj
+1 0 0 1 36 426 Tm (    }) Tj
+1 0 0 1 36 415 Tm () Tj
+1 0 0 1 36 404 Tm (    var tableData = this._sheets.readTable\(this._tableName\);) Tj
+1 0 0 1 36 393 Tm (    var existingRows = tableData.rows.map\(function\(row\) { return Util.rowToObject\(tableData.headers, row\); }\);) Tj
+1 0 0 1 36 382 Tm (    var idColumn = this._config.idColumn;) Tj
+1 0 0 1 36 371 Tm (    var duplicate = existingRows.some\(function\(row\) {) Tj
+1 0 0 1 36 360 Tm (      return row[idColumn] === record[idColumn];) Tj
+1 0 0 1 36 349 Tm (    }\);) Tj
+1 0 0 1 36 338 Tm (    if \(duplicate\) {) Tj
+1 0 0 1 36 327 Tm (      throw new ValidationError\('Record ID already exists: ' + record[idColumn]\);) Tj
+1 0 0 1 36 316 Tm (    }) Tj
+1 0 0 1 36 305 Tm (    existingRows.push\(record\);) Tj
+1 0 0 1 36 294 Tm (    var rowValues = existingRows.map\(function\(r\) { return Util.objectToRow\(schema.columns, r\); }\);) Tj
+1 0 0 1 36 283 Tm (    this._sheets.writeAllRows\(this._tableName, schema.columns, rowValues\);) Tj
+1 0 0 1 36 272 Tm (    this._audit.log\('insert', this._tableName, { id: record[this._config.idColumn] }\);) Tj
+1 0 0 1 36 261 Tm (    return record;) Tj
+1 0 0 1 36 250 Tm (  }) Tj
+1 0 0 1 36 239 Tm () Tj
+1 0 0 1 36 228 Tm (  /**) Tj
+1 0 0 1 36 217 Tm (   * @param {string} id) Tj
+1 0 0 1 36 206 Tm (   * @param {Object} patch) Tj
+1 0 0 1 36 195 Tm (   * @return {Object}) Tj
+1 0 0 1 36 184 Tm (   */) Tj
+1 0 0 1 36 173 Tm (  update\(id, patch\) {) Tj
+1 0 0 1 36 162 Tm (    var schema = this._schemas.get\(this._tableName\);) Tj
+1 0 0 1 36 151 Tm (    var normalizedPatch = this._schemas.normalizeRecord\(this._tableName, patch, true\);) Tj
+1 0 0 1 36 140 Tm (    var tableData = this._sheets.readTable\(this._tableName\);) Tj
+1 0 0 1 36 129 Tm (    var records = tableData.rows.map\(function\(row\) { return Util.rowToObject\(tableData.headers, row\); }\);) Tj
+1 0 0 1 36 118 Tm (    var found = null;) Tj
+1 0 0 1 36 107 Tm () Tj
+1 0 0 1 36 96 Tm (    for \(var i = 0; i < records.length; i++\) {) Tj
+1 0 0 1 36 85 Tm (      if \(records[i][this._config.idColumn] === id\) {) Tj
+1 0 0 1 36 74 Tm (        found = records[i];) Tj
+1 0 0 1 36 63 Tm (        Object.keys\(normalizedPatch\).forEach\(function\(key\) {) Tj
+1 0 0 1 36 52 Tm (          if \(key !== this._config.idColumn && key !== this._config.createdAtColumn\) {) Tj
+1 0 0 1 36 41 Tm (            found[key] = normalizedPatch[key];) Tj
+ET
+endstream
+endobj
+28 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R >> >> /Contents 29 0 R >>
+endobj
+29 0 obj
+<< /Length 3165 >>
+stream
+BT
+/F1 9 Tf
+1 0 0 1 36 756 Tm (          }) Tj
+1 0 0 1 36 745 Tm (        }, this\);) Tj
+1 0 0 1 36 734 Tm (        found[this._config.updatedAtColumn] = Util.nowIso\(\);) Tj
+1 0 0 1 36 723 Tm (        break;) Tj
+1 0 0 1 36 712 Tm (      }) Tj
+1 0 0 1 36 701 Tm (    }) Tj
+1 0 0 1 36 690 Tm () Tj
+1 0 0 1 36 679 Tm (    if \(!found\) {) Tj
+1 0 0 1 36 668 Tm (      throw new StorageError\('Record not found for id: ' + id\);) Tj
+1 0 0 1 36 657 Tm (    }) Tj
+1 0 0 1 36 646 Tm () Tj
+1 0 0 1 36 635 Tm (    var rowValues = records.map\(function\(r\) { return Util.objectToRow\(schema.columns, r\); }\);) Tj
+1 0 0 1 36 624 Tm (    this._sheets.writeAllRows\(this._tableName, schema.columns, rowValues\);) Tj
+1 0 0 1 36 613 Tm (    this._audit.log\('update', this._tableName, { id: id, fields: Object.keys\(normalizedPatch\) }\);) Tj
+1 0 0 1 36 602 Tm (    return found;) Tj
+1 0 0 1 36 591 Tm (  }) Tj
+1 0 0 1 36 580 Tm () Tj
+1 0 0 1 36 569 Tm (  /**) Tj
+1 0 0 1 36 558 Tm (   * Soft-deletes a record.) Tj
+1 0 0 1 36 547 Tm (   * @param {string} id) Tj
+1 0 0 1 36 536 Tm (   * @return {Object}) Tj
+1 0 0 1 36 525 Tm (   */) Tj
+1 0 0 1 36 514 Tm (  remove\(id\) {) Tj
+1 0 0 1 36 503 Tm (    var result = this.update\(id, \(function\(col, now\) {) Tj
+1 0 0 1 36 492 Tm (      var patch = {};) Tj
+1 0 0 1 36 481 Tm (      patch[col] = now;) Tj
+1 0 0 1 36 470 Tm (      return patch;) Tj
+1 0 0 1 36 459 Tm (    }\)\(this._config.deletedAtColumn, Util.nowIso\(\)\)\);) Tj
+1 0 0 1 36 448 Tm (    this._audit.log\('remove', this._tableName, { id: id }\);) Tj
+1 0 0 1 36 437 Tm (    return result;) Tj
+1 0 0 1 36 426 Tm (  }) Tj
+1 0 0 1 36 415 Tm (}) Tj
+1 0 0 1 36 404 Tm () Tj
+1 0 0 1 36 393 Tm (```) Tj
+1 0 0 1 36 382 Tm () Tj
+1 0 0 1 36 371 Tm () Tj
+1 0 0 1 36 360 Tm (# 08_TransactionManager.gs) Tj
+1 0 0 1 36 349 Tm () Tj
+1 0 0 1 36 338 Tm (**Source path:** `sheet_db_lib/08_TransactionManager.gs`) Tj
+1 0 0 1 36 327 Tm () Tj
+1 0 0 1 36 316 Tm (```javascript) Tj
+1 0 0 1 36 305 Tm (/**) Tj
+1 0 0 1 36 294 Tm ( * Runs operations under ScriptLock for coarse transaction semantics.) Tj
+1 0 0 1 36 283 Tm ( */) Tj
+1 0 0 1 36 272 Tm (class TransactionManager {) Tj
+1 0 0 1 36 261 Tm (  /**) Tj
+1 0 0 1 36 250 Tm (   * @param {number=} lockTimeoutMs) Tj
+1 0 0 1 36 239 Tm (   */) Tj
+1 0 0 1 36 228 Tm (  constructor\(lockTimeoutMs\) {) Tj
+1 0 0 1 36 217 Tm (    this._lockTimeoutMs = lockTimeoutMs || 30000;) Tj
+1 0 0 1 36 206 Tm (  }) Tj
+1 0 0 1 36 195 Tm () Tj
+1 0 0 1 36 184 Tm (  /**) Tj
+1 0 0 1 36 173 Tm (   * Executes callback while holding a script lock.) Tj
+1 0 0 1 36 162 Tm (   * @template T) Tj
+1 0 0 1 36 151 Tm (   * @param {function\(\): T} callback) Tj
+1 0 0 1 36 140 Tm (   * @return {T}) Tj
+1 0 0 1 36 129 Tm (   */) Tj
+1 0 0 1 36 118 Tm (  run\(callback\) {) Tj
+1 0 0 1 36 107 Tm (    var lock = LockService.getScriptLock\(\);) Tj
+1 0 0 1 36 96 Tm (    if \(!lock.tryLock\(this._lockTimeoutMs\)\) {) Tj
+1 0 0 1 36 85 Tm (      throw new TransactionError\('Failed to acquire script lock within timeout.'\);) Tj
+1 0 0 1 36 74 Tm (    }) Tj
+1 0 0 1 36 63 Tm (    try {) Tj
+1 0 0 1 36 52 Tm (      return callback\(\);) Tj
+1 0 0 1 36 41 Tm (    } finally {) Tj
+ET
+endstream
+endobj
+30 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R >> >> /Contents 31 0 R >>
+endobj
+31 0 obj
+<< /Length 2779 >>
+stream
+BT
+/F1 9 Tf
+1 0 0 1 36 756 Tm (      lock.releaseLock\(\);) Tj
+1 0 0 1 36 745 Tm (    }) Tj
+1 0 0 1 36 734 Tm (  }) Tj
+1 0 0 1 36 723 Tm (}) Tj
+1 0 0 1 36 712 Tm () Tj
+1 0 0 1 36 701 Tm (```) Tj
+1 0 0 1 36 690 Tm () Tj
+1 0 0 1 36 679 Tm () Tj
+1 0 0 1 36 668 Tm (# 09_AuditLogger.gs) Tj
+1 0 0 1 36 657 Tm () Tj
+1 0 0 1 36 646 Tm (**Source path:** `sheet_db_lib/09_AuditLogger.gs`) Tj
+1 0 0 1 36 635 Tm () Tj
+1 0 0 1 36 624 Tm (```javascript) Tj
+1 0 0 1 36 613 Tm (/**) Tj
+1 0 0 1 36 602 Tm ( * Minimal pluggable audit logger.) Tj
+1 0 0 1 36 591 Tm ( */) Tj
+1 0 0 1 36 580 Tm (class AuditLogger {) Tj
+1 0 0 1 36 569 Tm (  /**) Tj
+1 0 0 1 36 558 Tm (   * @param {Object=} options) Tj
+1 0 0 1 36 547 Tm (   * @param {Function=} options.sink Optional custom sink function.) Tj
+1 0 0 1 36 536 Tm (   */) Tj
+1 0 0 1 36 525 Tm (  constructor\(options\) {) Tj
+1 0 0 1 36 514 Tm (    var opts = options || {};) Tj
+1 0 0 1 36 503 Tm (    this._sink = opts.sink || function\(entry\) {) Tj
+1 0 0 1 36 492 Tm (      Logger.log\(JSON.stringify\(entry\)\);) Tj
+1 0 0 1 36 481 Tm (    };) Tj
+1 0 0 1 36 470 Tm (  }) Tj
+1 0 0 1 36 459 Tm () Tj
+1 0 0 1 36 448 Tm (  /**) Tj
+1 0 0 1 36 437 Tm (   * Emits an audit entry.) Tj
+1 0 0 1 36 426 Tm (   * @param {string} action) Tj
+1 0 0 1 36 415 Tm (   * @param {string} tableName) Tj
+1 0 0 1 36 404 Tm (   * @param {Object=} metadata) Tj
+1 0 0 1 36 393 Tm (   */) Tj
+1 0 0 1 36 382 Tm (  log\(action, tableName, metadata\) {) Tj
+1 0 0 1 36 371 Tm (    this._sink\({) Tj
+1 0 0 1 36 360 Tm (      at: Util.nowIso\(\),) Tj
+1 0 0 1 36 349 Tm (      action: action,) Tj
+1 0 0 1 36 338 Tm (      table: tableName,) Tj
+1 0 0 1 36 327 Tm (      metadata: Util.clone\(metadata || {}\)) Tj
+1 0 0 1 36 316 Tm (    }\);) Tj
+1 0 0 1 36 305 Tm (  }) Tj
+1 0 0 1 36 294 Tm (}) Tj
+1 0 0 1 36 283 Tm () Tj
+1 0 0 1 36 272 Tm (```) Tj
+1 0 0 1 36 261 Tm () Tj
+1 0 0 1 36 250 Tm () Tj
+1 0 0 1 36 239 Tm (# 10_ScriptProperties.gs) Tj
+1 0 0 1 36 228 Tm () Tj
+1 0 0 1 36 217 Tm (**Source path:** `sheet_db_lib/10_ScriptProperties.gs`) Tj
+1 0 0 1 36 206 Tm () Tj
+1 0 0 1 36 195 Tm (```javascript) Tj
+1 0 0 1 36 184 Tm (/**) Tj
+1 0 0 1 36 173 Tm ( * Script Properties helper for secure and environment-specific configuration.) Tj
+1 0 0 1 36 162 Tm ( */) Tj
+1 0 0 1 36 151 Tm (class ScriptPropertiesHelper {) Tj
+1 0 0 1 36 140 Tm (  /**) Tj
+1 0 0 1 36 129 Tm (   * Creates a helper bound to Script Properties store.) Tj
+1 0 0 1 36 118 Tm (   */) Tj
+1 0 0 1 36 107 Tm (  constructor\(\) {) Tj
+1 0 0 1 36 96 Tm (    this._props = PropertiesService.getScriptProperties\(\);) Tj
+1 0 0 1 36 85 Tm (  }) Tj
+1 0 0 1 36 74 Tm () Tj
+1 0 0 1 36 63 Tm (  /**) Tj
+1 0 0 1 36 52 Tm (   * Returns a property value, or a default when missing.) Tj
+1 0 0 1 36 41 Tm (   * @param {string} key) Tj
+ET
+endstream
+endobj
+32 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R >> >> /Contents 33 0 R >>
+endobj
+33 0 obj
+<< /Length 3385 >>
+stream
+BT
+/F1 9 Tf
+1 0 0 1 36 756 Tm (   * @param {*=} defaultValue) Tj
+1 0 0 1 36 745 Tm (   * @return {*}) Tj
+1 0 0 1 36 734 Tm (   */) Tj
+1 0 0 1 36 723 Tm (  get\(key, defaultValue\) {) Tj
+1 0 0 1 36 712 Tm (    var value = this._props.getProperty\(key\);) Tj
+1 0 0 1 36 701 Tm (    return value === null ? defaultValue : value;) Tj
+1 0 0 1 36 690 Tm (  }) Tj
+1 0 0 1 36 679 Tm () Tj
+1 0 0 1 36 668 Tm (  /**) Tj
+1 0 0 1 36 657 Tm (   * Returns a required property value or throws when missing/blank.) Tj
+1 0 0 1 36 646 Tm (   * @param {string} key) Tj
+1 0 0 1 36 635 Tm (   * @return {string}) Tj
+1 0 0 1 36 624 Tm (   */) Tj
+1 0 0 1 36 613 Tm (  getRequired\(key\) {) Tj
+1 0 0 1 36 602 Tm (    var value = this.get\(key, ''\);) Tj
+1 0 0 1 36 591 Tm (    if \(value === ''\) {) Tj
+1 0 0 1 36 580 Tm (      throw new ConfigError\('Missing required script property: ' + key\);) Tj
+1 0 0 1 36 569 Tm (    }) Tj
+1 0 0 1 36 558 Tm (    return String\(value\);) Tj
+1 0 0 1 36 547 Tm (  }) Tj
+1 0 0 1 36 536 Tm () Tj
+1 0 0 1 36 525 Tm (  /**) Tj
+1 0 0 1 36 514 Tm (   * Returns a boolean property value.) Tj
+1 0 0 1 36 503 Tm (   * Accepted true values: true, 1, yes, y, on.) Tj
+1 0 0 1 36 492 Tm (   * Accepted false values: false, 0, no, n, off.) Tj
+1 0 0 1 36 481 Tm (   * @param {string} key) Tj
+1 0 0 1 36 470 Tm (   * @param {boolean=} defaultValue) Tj
+1 0 0 1 36 459 Tm (   * @return {boolean}) Tj
+1 0 0 1 36 448 Tm (   */) Tj
+1 0 0 1 36 437 Tm (  getBoolean\(key, defaultValue\) {) Tj
+1 0 0 1 36 426 Tm (    var raw = this.get\(key, null\);) Tj
+1 0 0 1 36 415 Tm (    if \(raw === null || raw === ''\) {) Tj
+1 0 0 1 36 404 Tm (      return defaultValue === undefined ? false : !!defaultValue;) Tj
+1 0 0 1 36 393 Tm (    }) Tj
+1 0 0 1 36 382 Tm (    var normalized = String\(raw\).trim\(\).toLowerCase\(\);) Tj
+1 0 0 1 36 371 Tm (    if \(['true', '1', 'yes', 'y', 'on'].indexOf\(normalized\) !== -1\) {) Tj
+1 0 0 1 36 360 Tm (      return true;) Tj
+1 0 0 1 36 349 Tm (    }) Tj
+1 0 0 1 36 338 Tm (    if \(['false', '0', 'no', 'n', 'off'].indexOf\(normalized\) !== -1\) {) Tj
+1 0 0 1 36 327 Tm (      return false;) Tj
+1 0 0 1 36 316 Tm (    }) Tj
+1 0 0 1 36 305 Tm (    throw new ConfigError\('Script property is not a valid boolean: ' + key\);) Tj
+1 0 0 1 36 294 Tm (  }) Tj
+1 0 0 1 36 283 Tm () Tj
+1 0 0 1 36 272 Tm (  /**) Tj
+1 0 0 1 36 261 Tm (   * Returns a numeric property value.) Tj
+1 0 0 1 36 250 Tm (   * @param {string} key) Tj
+1 0 0 1 36 239 Tm (   * @param {number=} defaultValue) Tj
+1 0 0 1 36 228 Tm (   * @return {number}) Tj
+1 0 0 1 36 217 Tm (   */) Tj
+1 0 0 1 36 206 Tm (  getNumber\(key, defaultValue\) {) Tj
+1 0 0 1 36 195 Tm (    var raw = this.get\(key, null\);) Tj
+1 0 0 1 36 184 Tm (    if \(raw === null || raw === ''\) {) Tj
+1 0 0 1 36 173 Tm (      return defaultValue === undefined ? 0 : Number\(defaultValue\);) Tj
+1 0 0 1 36 162 Tm (    }) Tj
+1 0 0 1 36 151 Tm (    var n = Number\(raw\);) Tj
+1 0 0 1 36 140 Tm (    if \(isNaN\(n\)\) {) Tj
+1 0 0 1 36 129 Tm (      throw new ConfigError\('Script property is not a valid number: ' + key\);) Tj
+1 0 0 1 36 118 Tm (    }) Tj
+1 0 0 1 36 107 Tm (    return n;) Tj
+1 0 0 1 36 96 Tm (  }) Tj
+1 0 0 1 36 85 Tm () Tj
+1 0 0 1 36 74 Tm (  /**) Tj
+1 0 0 1 36 63 Tm (   * Returns all script properties as key-value object.) Tj
+1 0 0 1 36 52 Tm (   * @return {Object<string, string>}) Tj
+1 0 0 1 36 41 Tm (   */) Tj
+ET
+endstream
+endobj
+34 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R >> >> /Contents 35 0 R >>
+endobj
+35 0 obj
+<< /Length 3144 >>
+stream
+BT
+/F1 9 Tf
+1 0 0 1 36 756 Tm (  getAll\(\) {) Tj
+1 0 0 1 36 745 Tm (    return this._props.getProperties\(\);) Tj
+1 0 0 1 36 734 Tm (  }) Tj
+1 0 0 1 36 723 Tm () Tj
+1 0 0 1 36 712 Tm (  /**) Tj
+1 0 0 1 36 701 Tm (   * Returns all script properties with sensitive values redacted.) Tj
+1 0 0 1 36 690 Tm (   * @return {Object<string, string>}) Tj
+1 0 0 1 36 679 Tm (   */) Tj
+1 0 0 1 36 668 Tm (  getAllRedacted\(\) {) Tj
+1 0 0 1 36 657 Tm (    var all = this.getAll\(\);) Tj
+1 0 0 1 36 646 Tm (    var out = {};) Tj
+1 0 0 1 36 635 Tm (    Object.keys\(all\).forEach\(function\(key\) {) Tj
+1 0 0 1 36 624 Tm (      out[key] = ScriptPropertiesHelper.shouldRedactKey\(key\) ? '[REDACTED]' : all[key];) Tj
+1 0 0 1 36 613 Tm (    }\);) Tj
+1 0 0 1 36 602 Tm (    return out;) Tj
+1 0 0 1 36 591 Tm (  }) Tj
+1 0 0 1 36 580 Tm () Tj
+1 0 0 1 36 569 Tm (  /**) Tj
+1 0 0 1 36 558 Tm (   * Sets a script property value.) Tj
+1 0 0 1 36 547 Tm (   * @param {string} key) Tj
+1 0 0 1 36 536 Tm (   * @param {*} value) Tj
+1 0 0 1 36 525 Tm (   */) Tj
+1 0 0 1 36 514 Tm (  set\(key, value\) {) Tj
+1 0 0 1 36 503 Tm (    this._props.setProperty\(key, String\(value\)\);) Tj
+1 0 0 1 36 492 Tm (  }) Tj
+1 0 0 1 36 481 Tm () Tj
+1 0 0 1 36 470 Tm (  /**) Tj
+1 0 0 1 36 459 Tm (   * Sets multiple script properties.) Tj
+1 0 0 1 36 448 Tm (   * @param {Object<string, *>} obj) Tj
+1 0 0 1 36 437 Tm (   */) Tj
+1 0 0 1 36 426 Tm (  setMany\(obj\) {) Tj
+1 0 0 1 36 415 Tm (    var stringified = {};) Tj
+1 0 0 1 36 404 Tm (    Object.keys\(obj || {}\).forEach\(function\(key\) {) Tj
+1 0 0 1 36 393 Tm (      stringified[key] = String\(obj[key]\);) Tj
+1 0 0 1 36 382 Tm (    }\);) Tj
+1 0 0 1 36 371 Tm (    this._props.setProperties\(stringified, false\);) Tj
+1 0 0 1 36 360 Tm (  }) Tj
+1 0 0 1 36 349 Tm () Tj
+1 0 0 1 36 338 Tm (  /**) Tj
+1 0 0 1 36 327 Tm (   * Deletes a script property.) Tj
+1 0 0 1 36 316 Tm (   * @param {string} key) Tj
+1 0 0 1 36 305 Tm (   */) Tj
+1 0 0 1 36 294 Tm (  delete\(key\) {) Tj
+1 0 0 1 36 283 Tm (    this._props.deleteProperty\(key\);) Tj
+1 0 0 1 36 272 Tm (  }) Tj
+1 0 0 1 36 261 Tm () Tj
+1 0 0 1 36 250 Tm (  /**) Tj
+1 0 0 1 36 239 Tm (   * Returns true when a script property exists and is non-empty.) Tj
+1 0 0 1 36 228 Tm (   * @param {string} key) Tj
+1 0 0 1 36 217 Tm (   * @return {boolean}) Tj
+1 0 0 1 36 206 Tm (   */) Tj
+1 0 0 1 36 195 Tm (  has\(key\) {) Tj
+1 0 0 1 36 184 Tm (    var value = this._props.getProperty\(key\);) Tj
+1 0 0 1 36 173 Tm (    return value !== null && value !== '';) Tj
+1 0 0 1 36 162 Tm (  }) Tj
+1 0 0 1 36 151 Tm () Tj
+1 0 0 1 36 140 Tm (  /**) Tj
+1 0 0 1 36 129 Tm (   * Returns true when key should be redacted in debug output.) Tj
+1 0 0 1 36 118 Tm (   * @param {string} key) Tj
+1 0 0 1 36 107 Tm (   * @return {boolean}) Tj
+1 0 0 1 36 96 Tm (   */) Tj
+1 0 0 1 36 85 Tm (  static shouldRedactKey\(key\) {) Tj
+1 0 0 1 36 74 Tm (    var upper = String\(key || ''\).toUpperCase\(\);) Tj
+1 0 0 1 36 63 Tm (    if \(upper === 'APP_PASSCODE' || upper === 'SIGNING_SECRET' || upper === 'WEBHOOK_SECRET' || upper === 'API_KEY'\) {) Tj
+1 0 0 1 36 52 Tm (      return true;) Tj
+1 0 0 1 36 41 Tm (    }) Tj
+ET
+endstream
+endobj
+36 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R >> >> /Contents 37 0 R >>
+endobj
+37 0 obj
+<< /Length 3581 >>
+stream
+BT
+/F1 9 Tf
+1 0 0 1 36 756 Tm (    return upper.indexOf\('TOKEN'\) !== -1 || upper.indexOf\('SECRET'\) !== -1 || upper.indexOf\('PASSWORD'\) !== -1;) Tj
+1 0 0 1 36 745 Tm (  }) Tj
+1 0 0 1 36 734 Tm (}) Tj
+1 0 0 1 36 723 Tm () Tj
+1 0 0 1 36 712 Tm (/**) Tj
+1 0 0 1 36 701 Tm ( * Reads SheetDb client-related config from Script Properties.) Tj
+1 0 0 1 36 690 Tm ( *) Tj
+1 0 0 1 36 679 Tm ( * Supported keys:) Tj
+1 0 0 1 36 668 Tm ( * - SHEET_DB_SPREADSHEET_ID) Tj
+1 0 0 1 36 657 Tm ( * - SHEET_DB_ID_COLUMN) Tj
+1 0 0 1 36 646 Tm ( * - SHEET_DB_CREATED_AT_COLUMN) Tj
+1 0 0 1 36 635 Tm ( * - SHEET_DB_UPDATED_AT_COLUMN) Tj
+1 0 0 1 36 624 Tm ( * - SHEET_DB_DELETED_AT_COLUMN) Tj
+1 0 0 1 36 613 Tm ( * - SHEET_DB_LOCK_TIMEOUT_MS) Tj
+1 0 0 1 36 602 Tm ( *) Tj
+1 0 0 1 36 591 Tm ( * Also reserved for host-layer secure use:) Tj
+1 0 0 1 36 580 Tm ( * - APP_PASSCODE) Tj
+1 0 0 1 36 569 Tm ( * - SIGNING_SECRET) Tj
+1 0 0 1 36 558 Tm ( * - WEBHOOK_SECRET) Tj
+1 0 0 1 36 547 Tm ( * - API_KEY) Tj
+1 0 0 1 36 536 Tm ( *) Tj
+1 0 0 1 36 525 Tm ( * @return {Object}) Tj
+1 0 0 1 36 514 Tm ( */) Tj
+1 0 0 1 36 503 Tm (function readSheetDbConfigFromScriptProperties\(\) {) Tj
+1 0 0 1 36 492 Tm (  var helper = new ScriptPropertiesHelper\(\);) Tj
+1 0 0 1 36 481 Tm (  var config = {};) Tj
+1 0 0 1 36 470 Tm () Tj
+1 0 0 1 36 459 Tm (  if \(helper.has\('SHEET_DB_SPREADSHEET_ID'\)\) {) Tj
+1 0 0 1 36 448 Tm (    config.spreadsheetId = helper.get\('SHEET_DB_SPREADSHEET_ID', ''\);) Tj
+1 0 0 1 36 437 Tm (  }) Tj
+1 0 0 1 36 426 Tm (  if \(helper.has\('SHEET_DB_ID_COLUMN'\)\) {) Tj
+1 0 0 1 36 415 Tm (    config.idColumn = helper.get\('SHEET_DB_ID_COLUMN', 'id'\);) Tj
+1 0 0 1 36 404 Tm (  }) Tj
+1 0 0 1 36 393 Tm (  if \(helper.has\('SHEET_DB_CREATED_AT_COLUMN'\)\) {) Tj
+1 0 0 1 36 382 Tm (    config.createdAtColumn = helper.get\('SHEET_DB_CREATED_AT_COLUMN', 'createdAt'\);) Tj
+1 0 0 1 36 371 Tm (  }) Tj
+1 0 0 1 36 360 Tm (  if \(helper.has\('SHEET_DB_UPDATED_AT_COLUMN'\)\) {) Tj
+1 0 0 1 36 349 Tm (    config.updatedAtColumn = helper.get\('SHEET_DB_UPDATED_AT_COLUMN', 'updatedAt'\);) Tj
+1 0 0 1 36 338 Tm (  }) Tj
+1 0 0 1 36 327 Tm (  if \(helper.has\('SHEET_DB_DELETED_AT_COLUMN'\)\) {) Tj
+1 0 0 1 36 316 Tm (    config.deletedAtColumn = helper.get\('SHEET_DB_DELETED_AT_COLUMN', 'deletedAt'\);) Tj
+1 0 0 1 36 305 Tm (  }) Tj
+1 0 0 1 36 294 Tm (  if \(helper.has\('SHEET_DB_LOCK_TIMEOUT_MS'\)\) {) Tj
+1 0 0 1 36 283 Tm (    config.lockTimeoutMs = helper.getNumber\('SHEET_DB_LOCK_TIMEOUT_MS', 30000\);) Tj
+1 0 0 1 36 272 Tm (  }) Tj
+1 0 0 1 36 261 Tm () Tj
+1 0 0 1 36 250 Tm (  return config;) Tj
+1 0 0 1 36 239 Tm (}) Tj
+1 0 0 1 36 228 Tm () Tj
+1 0 0 1 36 217 Tm (/**) Tj
+1 0 0 1 36 206 Tm ( * Merges explicit client options with script properties-based config.) Tj
+1 0 0 1 36 195 Tm ( * Precedence: explicit options > script properties > hardcoded defaults.) Tj
+1 0 0 1 36 184 Tm ( *) Tj
+1 0 0 1 36 173 Tm ( * @param {Object=} options) Tj
+1 0 0 1 36 162 Tm ( * @return {Object}) Tj
+1 0 0 1 36 151 Tm ( */) Tj
+1 0 0 1 36 140 Tm (function mergeClientOptionsWithScriptProperties\(options\) {) Tj
+1 0 0 1 36 129 Tm (  var fromProps = readSheetDbConfigFromScriptProperties\(\);) Tj
+1 0 0 1 36 118 Tm (  var explicit = options || {};) Tj
+1 0 0 1 36 107 Tm (  var merged = {};) Tj
+1 0 0 1 36 96 Tm (  Object.keys\(fromProps\).forEach\(function\(key\) {) Tj
+1 0 0 1 36 85 Tm (    merged[key] = fromProps[key];) Tj
+1 0 0 1 36 74 Tm (  }\);) Tj
+1 0 0 1 36 63 Tm (  Object.keys\(explicit\).forEach\(function\(key\) {) Tj
+1 0 0 1 36 52 Tm (    merged[key] = explicit[key];) Tj
+1 0 0 1 36 41 Tm (  }\);) Tj
+ET
+endstream
+endobj
+38 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R >> >> /Contents 39 0 R >>
+endobj
+39 0 obj
+<< /Length 3484 >>
+stream
+BT
+/F1 9 Tf
+1 0 0 1 36 756 Tm (  return merged;) Tj
+1 0 0 1 36 745 Tm (}) Tj
+1 0 0 1 36 734 Tm () Tj
+1 0 0 1 36 723 Tm (/**) Tj
+1 0 0 1 36 712 Tm ( * Example setup helper for consumers \(manual one-time setup\).) Tj
+1 0 0 1 36 701 Tm ( *) Tj
+1 0 0 1 36 690 Tm ( * Example:) Tj
+1 0 0 1 36 679 Tm ( * PropertiesService.getScriptProperties\(\).setProperty\('SHEET_DB_SPREADSHEET_ID', '...'\);) Tj
+1 0 0 1 36 668 Tm ( */) Tj
+1 0 0 1 36 657 Tm (function exampleSetSheetDbScriptProperties\(\) {) Tj
+1 0 0 1 36 646 Tm (  // Intentionally no-op; serves as in-library usage documentation only.) Tj
+1 0 0 1 36 635 Tm (}) Tj
+1 0 0 1 36 624 Tm () Tj
+1 0 0 1 36 613 Tm (```) Tj
+1 0 0 1 36 602 Tm () Tj
+1 0 0 1 36 591 Tm () Tj
+1 0 0 1 36 580 Tm (# 00_WebAppEntry.gs) Tj
+1 0 0 1 36 569 Tm () Tj
+1 0 0 1 36 558 Tm (**Source path:** `slack_host/00_WebAppEntry.gs`) Tj
+1 0 0 1 36 547 Tm () Tj
+1 0 0 1 36 536 Tm (```javascript) Tj
+1 0 0 1 36 525 Tm (/**) Tj
+1 0 0 1 36 514 Tm ( * Slack host entrypoint \(web app\).) Tj
+1 0 0 1 36 503 Tm ( */) Tj
+1 0 0 1 36 492 Tm () Tj
+1 0 0 1 36 481 Tm (/**) Tj
+1 0 0 1 36 470 Tm ( * Creates a DB client from SheetDb library and registers host schemas.) Tj
+1 0 0 1 36 459 Tm ( * @return {DbClient}) Tj
+1 0 0 1 36 448 Tm ( */) Tj
+1 0 0 1 36 437 Tm (function createHostDbClient\(\) {) Tj
+1 0 0 1 36 426 Tm (  var db = SheetDb.createClientFromScriptProperties\(\);) Tj
+1 0 0 1 36 415 Tm () Tj
+1 0 0 1 36 404 Tm (  db.schema\('students', {) Tj
+1 0 0 1 36 393 Tm (    columns: ['id', 'name', 'source', 'createdAt', 'updatedAt', 'deletedAt'],) Tj
+1 0 0 1 36 382 Tm (    fields: {) Tj
+1 0 0 1 36 371 Tm (      id: { required: true, type: 'string' },) Tj
+1 0 0 1 36 360 Tm (      name: { required: true, type: 'string' },) Tj
+1 0 0 1 36 349 Tm (      source: { default: 'slack', type: 'string' }) Tj
+1 0 0 1 36 338 Tm (    }) Tj
+1 0 0 1 36 327 Tm (  }\);) Tj
+1 0 0 1 36 316 Tm () Tj
+1 0 0 1 36 305 Tm (  db.schema\('enrollments', {) Tj
+1 0 0 1 36 294 Tm (    columns: ['id', 'studentId', 'courseId', 'status', 'source', 'createdAt', 'updatedAt', 'deletedAt'],) Tj
+1 0 0 1 36 283 Tm (    fields: {) Tj
+1 0 0 1 36 272 Tm (      studentId: { required: true, type: 'string' },) Tj
+1 0 0 1 36 261 Tm (      courseId: { required: true, type: 'string' },) Tj
+1 0 0 1 36 250 Tm (      status: { default: 'enrolled', type: 'string' },) Tj
+1 0 0 1 36 239 Tm (      source: { default: 'slack', type: 'string' }) Tj
+1 0 0 1 36 228 Tm (    }) Tj
+1 0 0 1 36 217 Tm (  }\);) Tj
+1 0 0 1 36 206 Tm () Tj
+1 0 0 1 36 195 Tm (  db.schema\('automations', {) Tj
+1 0 0 1 36 184 Tm (    columns: ['id', 'requestId', 'workflow', 'eventType', 'state', 'createdAt', 'updatedAt', 'deletedAt'],) Tj
+1 0 0 1 36 173 Tm (    fields: {) Tj
+1 0 0 1 36 162 Tm (      requestId: { required: true, type: 'string' },) Tj
+1 0 0 1 36 151 Tm (      workflow: { required: true, type: 'string' },) Tj
+1 0 0 1 36 140 Tm (      eventType: { required: true, type: 'string' },) Tj
+1 0 0 1 36 129 Tm (      state: { default: 'received', type: 'string' }) Tj
+1 0 0 1 36 118 Tm (    }) Tj
+1 0 0 1 36 107 Tm (  }\);) Tj
+1 0 0 1 36 96 Tm () Tj
+1 0 0 1 36 85 Tm (  db.schema\('audit_logs', {) Tj
+1 0 0 1 36 74 Tm (    columns: ['id', 'requestId', 'source', 'action', 'status', 'message', 'metadata', 'createdAt', 'updatedAt', 'deletedAt'],) Tj
+1 0 0 1 36 63 Tm (    fields: {) Tj
+1 0 0 1 36 52 Tm (      requestId: { required: true, type: 'string' },) Tj
+1 0 0 1 36 41 Tm (      source: { required: true, type: 'string' },) Tj
+ET
+endstream
+endobj
+40 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R >> >> /Contents 41 0 R >>
+endobj
+41 0 obj
+<< /Length 3428 >>
+stream
+BT
+/F1 9 Tf
+1 0 0 1 36 756 Tm (      action: { required: true, type: 'string' },) Tj
+1 0 0 1 36 745 Tm (      status: { required: true, type: 'string' },) Tj
+1 0 0 1 36 734 Tm (      message: { type: 'string' },) Tj
+1 0 0 1 36 723 Tm (      metadata: { type: 'string' }) Tj
+1 0 0 1 36 712 Tm (    }) Tj
+1 0 0 1 36 701 Tm (  }\);) Tj
+1 0 0 1 36 690 Tm () Tj
+1 0 0 1 36 679 Tm (  return db;) Tj
+1 0 0 1 36 668 Tm (}) Tj
+1 0 0 1 36 657 Tm () Tj
+1 0 0 1 36 646 Tm (/**) Tj
+1 0 0 1 36 635 Tm ( * Creates the host-layer router with all dependencies wired.) Tj
+1 0 0 1 36 624 Tm ( * @param {DbClient} db) Tj
+1 0 0 1 36 613 Tm ( * @param {HostConfig} hostConfig) Tj
+1 0 0 1 36 602 Tm ( * @return {SlackRouter}) Tj
+1 0 0 1 36 591 Tm ( */) Tj
+1 0 0 1 36 580 Tm (function createHostRouter\(db, hostConfig\) {) Tj
+1 0 0 1 36 569 Tm (  var parser = new SlackPayloadParser\(\);) Tj
+1 0 0 1 36 558 Tm (  var security = new SlackSecurity\(hostConfig\);) Tj
+1 0 0 1 36 547 Tm (  var contexts = new RequestContextFactory\(hostConfig\);) Tj
+1 0 0 1 36 536 Tm (  var formatter = new ResultFormatter\(\);) Tj
+1 0 0 1 36 525 Tm () Tj
+1 0 0 1 36 514 Tm (  var enrollmentService = new LmsEnrollmentService\(db\);) Tj
+1 0 0 1 36 503 Tm (  var automationService = new LmsAutomationService\(db\);) Tj
+1 0 0 1 36 492 Tm (  var workflowHandlers = new WorkflowWebhookHandlers\(enrollmentService, automationService\);) Tj
+1 0 0 1 36 481 Tm (  var slackService = new SlackService\(enrollmentService, workflowHandlers, formatter\);) Tj
+1 0 0 1 36 470 Tm () Tj
+1 0 0 1 36 459 Tm (  return new SlackRouter\(parser, security, contexts, slackService, formatter, db\);) Tj
+1 0 0 1 36 448 Tm (}) Tj
+1 0 0 1 36 437 Tm () Tj
+1 0 0 1 36 426 Tm (/**) Tj
+1 0 0 1 36 415 Tm ( * Webhook entrypoint.) Tj
+1 0 0 1 36 404 Tm ( * @param {GoogleAppsScript.Events.DoPost} e) Tj
+1 0 0 1 36 393 Tm ( * @return {GoogleAppsScript.Content.TextOutput}) Tj
+1 0 0 1 36 382 Tm ( */) Tj
+1 0 0 1 36 371 Tm (function doPost\(e\) {) Tj
+1 0 0 1 36 360 Tm (  var db = createHostDbClient\(\);) Tj
+1 0 0 1 36 349 Tm (  var hostConfig = new HostConfig\(new ScriptPropertiesHelper\(\)\);) Tj
+1 0 0 1 36 338 Tm (  var router = createHostRouter\(db, hostConfig\);) Tj
+1 0 0 1 36 327 Tm (  var result = router.handle\(e\);) Tj
+1 0 0 1 36 316 Tm () Tj
+1 0 0 1 36 305 Tm (  return ContentService) Tj
+1 0 0 1 36 294 Tm (    .createTextOutput\(JSON.stringify\(result.slack || result\)\)) Tj
+1 0 0 1 36 283 Tm (    .setMimeType\(ContentService.MimeType.JSON\);) Tj
+1 0 0 1 36 272 Tm (}) Tj
+1 0 0 1 36 261 Tm () Tj
+1 0 0 1 36 250 Tm (```) Tj
+1 0 0 1 36 239 Tm () Tj
+1 0 0 1 36 228 Tm () Tj
+1 0 0 1 36 217 Tm (# 01_SlackRouter.gs) Tj
+1 0 0 1 36 206 Tm () Tj
+1 0 0 1 36 195 Tm (**Source path:** `slack_host/01_SlackRouter.gs`) Tj
+1 0 0 1 36 184 Tm () Tj
+1 0 0 1 36 173 Tm (```javascript) Tj
+1 0 0 1 36 162 Tm (/**) Tj
+1 0 0 1 36 151 Tm ( * HTTP router boundary: parse -> verify -> context -> app service.) Tj
+1 0 0 1 36 140 Tm ( */) Tj
+1 0 0 1 36 129 Tm (class SlackRouter {) Tj
+1 0 0 1 36 118 Tm (  /**) Tj
+1 0 0 1 36 107 Tm (   * @param {SlackPayloadParser} parser) Tj
+1 0 0 1 36 96 Tm (   * @param {SlackSecurity} security) Tj
+1 0 0 1 36 85 Tm (   * @param {RequestContextFactory} contextFactory) Tj
+1 0 0 1 36 74 Tm (   * @param {SlackService} slackService) Tj
+1 0 0 1 36 63 Tm (   * @param {ResultFormatter} resultFormatter) Tj
+1 0 0 1 36 52 Tm (   * @param {DbClient} db) Tj
+1 0 0 1 36 41 Tm (   */) Tj
+ET
+endstream
+endobj
+42 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R >> >> /Contents 43 0 R >>
+endobj
+43 0 obj
+<< /Length 3472 >>
+stream
+BT
+/F1 9 Tf
+1 0 0 1 36 756 Tm (  constructor\(parser, security, contextFactory, slackService, resultFormatter, db\) {) Tj
+1 0 0 1 36 745 Tm (    this._parser = parser;) Tj
+1 0 0 1 36 734 Tm (    this._security = security;) Tj
+1 0 0 1 36 723 Tm (    this._contexts = contextFactory;) Tj
+1 0 0 1 36 712 Tm (    this._service = slackService;) Tj
+1 0 0 1 36 701 Tm (    this._results = resultFormatter;) Tj
+1 0 0 1 36 690 Tm (    this._db = db;) Tj
+1 0 0 1 36 679 Tm (  }) Tj
+1 0 0 1 36 668 Tm () Tj
+1 0 0 1 36 657 Tm (  /**) Tj
+1 0 0 1 36 646 Tm (   * @param {GoogleAppsScript.Events.DoPost} e) Tj
+1 0 0 1 36 635 Tm (   * @return {Object}) Tj
+1 0 0 1 36 624 Tm (   */) Tj
+1 0 0 1 36 613 Tm (  handle\(e\) {) Tj
+1 0 0 1 36 602 Tm (    var parsed = this._parser.parseEvent\(e\);) Tj
+1 0 0 1 36 591 Tm (    var context = this._contexts.create\(parsed.routeType, parsed.payload, parsed.envelope\);) Tj
+1 0 0 1 36 580 Tm () Tj
+1 0 0 1 36 569 Tm (    var auth = this._security.verify\(parsed\);) Tj
+1 0 0 1 36 558 Tm (    if \(!auth.ok\) {) Tj
+1 0 0 1 36 547 Tm (      var denied = this._results.failure\(auth.code, auth.message, context, {}\);) Tj
+1 0 0 1 36 536 Tm (      this._writeAudit\(context, denied\);) Tj
+1 0 0 1 36 525 Tm (      return denied;) Tj
+1 0 0 1 36 514 Tm (    }) Tj
+1 0 0 1 36 503 Tm () Tj
+1 0 0 1 36 492 Tm (    var result;) Tj
+1 0 0 1 36 481 Tm (    try {) Tj
+1 0 0 1 36 470 Tm (      if \(parsed.routeType === 'slash_command'\) {) Tj
+1 0 0 1 36 459 Tm (        result = this._service.handleSlashCommand\(context, parsed.payload\);) Tj
+1 0 0 1 36 448 Tm (      } else if \(parsed.routeType === 'workflow_webhook'\) {) Tj
+1 0 0 1 36 437 Tm (        result = this._service.handleWorkflowWebhook\(context, parsed.payload\);) Tj
+1 0 0 1 36 426 Tm (      } else {) Tj
+1 0 0 1 36 415 Tm (        result = this._results.failure\('UNSUPPORTED_PAYLOAD', 'Unsupported payload.', context, {}\);) Tj
+1 0 0 1 36 404 Tm (      }) Tj
+1 0 0 1 36 393 Tm (    } catch \(err\) {) Tj
+1 0 0 1 36 382 Tm (      result = this._results.failure\(err.code || 'HOST_ERROR', err.message || 'Unexpected error.', context, {}\);) Tj
+1 0 0 1 36 371 Tm (    }) Tj
+1 0 0 1 36 360 Tm () Tj
+1 0 0 1 36 349 Tm (    this._writeAudit\(context, result\);) Tj
+1 0 0 1 36 338 Tm (    return result;) Tj
+1 0 0 1 36 327 Tm (  }) Tj
+1 0 0 1 36 316 Tm () Tj
+1 0 0 1 36 305 Tm (  /** @private */) Tj
+1 0 0 1 36 294 Tm (  _writeAudit\(context, result\) {) Tj
+1 0 0 1 36 283 Tm (    this._db.table\('audit_logs'\).insert\({) Tj
+1 0 0 1 36 272 Tm (      requestId: context.requestId,) Tj
+1 0 0 1 36 261 Tm (      source: context.source,) Tj
+1 0 0 1 36 250 Tm (      action: context.routeType,) Tj
+1 0 0 1 36 239 Tm (      status: result.ok ? 'success' : 'failure',) Tj
+1 0 0 1 36 228 Tm (      message: result.message,) Tj
+1 0 0 1 36 217 Tm (      metadata: JSON.stringify\({ code: result.code, requestId: result.requestId }\)) Tj
+1 0 0 1 36 206 Tm (    }\);) Tj
+1 0 0 1 36 195 Tm (  }) Tj
+1 0 0 1 36 184 Tm (}) Tj
+1 0 0 1 36 173 Tm () Tj
+1 0 0 1 36 162 Tm (```) Tj
+1 0 0 1 36 151 Tm () Tj
+1 0 0 1 36 140 Tm () Tj
+1 0 0 1 36 129 Tm (# 02_SlackPayloadParser.gs) Tj
+1 0 0 1 36 118 Tm () Tj
+1 0 0 1 36 107 Tm (**Source path:** `slack_host/02_SlackPayloadParser.gs`) Tj
+1 0 0 1 36 96 Tm () Tj
+1 0 0 1 36 85 Tm (```javascript) Tj
+1 0 0 1 36 74 Tm (/**) Tj
+1 0 0 1 36 63 Tm ( * Parses and normalizes inbound Slack-related payloads.) Tj
+1 0 0 1 36 52 Tm ( */) Tj
+1 0 0 1 36 41 Tm (class SlackPayloadParser {) Tj
+ET
+endstream
+endobj
+44 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R >> >> /Contents 45 0 R >>
+endobj
+45 0 obj
+<< /Length 3699 >>
+stream
+BT
+/F1 9 Tf
+1 0 0 1 36 756 Tm (  /**) Tj
+1 0 0 1 36 745 Tm (   * @param {GoogleAppsScript.Events.DoPost} e) Tj
+1 0 0 1 36 734 Tm (   * @return {{routeType: string, payload: Object, envelope: Object}}) Tj
+1 0 0 1 36 723 Tm (   */) Tj
+1 0 0 1 36 712 Tm (  parseEvent\(e\) {) Tj
+1 0 0 1 36 701 Tm (    var rawBody = \(e && e.postData && e.postData.contents\) ? e.postData.contents : '';) Tj
+1 0 0 1 36 690 Tm (    var params = this._parseFormEncoded\(rawBody\);) Tj
+1 0 0 1 36 679 Tm () Tj
+1 0 0 1 36 668 Tm (    if \(params.command\) {) Tj
+1 0 0 1 36 657 Tm (      return {) Tj
+1 0 0 1 36 646 Tm (        routeType: 'slash_command',) Tj
+1 0 0 1 36 635 Tm (        payload: this._normalizeSlashCommand\(params\),) Tj
+1 0 0 1 36 624 Tm (        envelope: { rawBody: rawBody, params: params }) Tj
+1 0 0 1 36 613 Tm (      };) Tj
+1 0 0 1 36 602 Tm (    }) Tj
+1 0 0 1 36 591 Tm () Tj
+1 0 0 1 36 580 Tm (    var jsonPayload = this._parseJson\(rawBody\);) Tj
+1 0 0 1 36 569 Tm (    if \(jsonPayload\) {) Tj
+1 0 0 1 36 558 Tm (      return {) Tj
+1 0 0 1 36 547 Tm (        routeType: 'workflow_webhook',) Tj
+1 0 0 1 36 536 Tm (        payload: this._normalizeWorkflowWebhook\(jsonPayload\),) Tj
+1 0 0 1 36 525 Tm (        envelope: { rawBody: rawBody, json: jsonPayload }) Tj
+1 0 0 1 36 514 Tm (      };) Tj
+1 0 0 1 36 503 Tm (    }) Tj
+1 0 0 1 36 492 Tm () Tj
+1 0 0 1 36 481 Tm (    return { routeType: 'unknown', payload: {}, envelope: { rawBody: rawBody } };) Tj
+1 0 0 1 36 470 Tm (  }) Tj
+1 0 0 1 36 459 Tm () Tj
+1 0 0 1 36 448 Tm (  /** @private */) Tj
+1 0 0 1 36 437 Tm (  _normalizeSlashCommand\(payload\) {) Tj
+1 0 0 1 36 426 Tm (    return {) Tj
+1 0 0 1 36 415 Tm (      command: String\(payload.command || ''\).trim\(\),) Tj
+1 0 0 1 36 404 Tm (      text: String\(payload.text || ''\).trim\(\),) Tj
+1 0 0 1 36 393 Tm (      teamId: String\(payload.team_id || ''\),) Tj
+1 0 0 1 36 382 Tm (      channelId: String\(payload.channel_id || ''\),) Tj
+1 0 0 1 36 371 Tm (      userId: String\(payload.user_id || ''\),) Tj
+1 0 0 1 36 360 Tm (      triggerId: String\(payload.trigger_id || ''\),) Tj
+1 0 0 1 36 349 Tm (      responseUrl: String\(payload.response_url || ''\),) Tj
+1 0 0 1 36 338 Tm (      requestId: String\(payload.request_id || Util.generateId\('slash'\)\)) Tj
+1 0 0 1 36 327 Tm (    };) Tj
+1 0 0 1 36 316 Tm (  }) Tj
+1 0 0 1 36 305 Tm () Tj
+1 0 0 1 36 294 Tm (  /** @private */) Tj
+1 0 0 1 36 283 Tm (  _normalizeWorkflowWebhook\(payload\) {) Tj
+1 0 0 1 36 272 Tm (    var data = payload.data || payload;) Tj
+1 0 0 1 36 261 Tm (    return {) Tj
+1 0 0 1 36 250 Tm (      workflow: String\(payload.workflow || payload.workflow_name || 'unknown_workflow'\),) Tj
+1 0 0 1 36 239 Tm (      eventType: String\(payload.eventType || payload.event_type || 'workflow_event'\),) Tj
+1 0 0 1 36 228 Tm (      requestId: String\(payload.requestId || payload.request_id || Util.generateId\('wf'\)\),) Tj
+1 0 0 1 36 217 Tm (      studentId: String\(data.studentId || data.student_id || ''\),) Tj
+1 0 0 1 36 206 Tm (      courseId: String\(data.courseId || data.course_id || ''\),) Tj
+1 0 0 1 36 195 Tm (      actorId: String\(data.actorId || data.actor_id || ''\),) Tj
+1 0 0 1 36 184 Tm (      status: String\(data.status || ''\)) Tj
+1 0 0 1 36 173 Tm (    };) Tj
+1 0 0 1 36 162 Tm (  }) Tj
+1 0 0 1 36 151 Tm () Tj
+1 0 0 1 36 140 Tm (  /** @private */) Tj
+1 0 0 1 36 129 Tm (  _parseJson\(raw\) {) Tj
+1 0 0 1 36 118 Tm (    try {) Tj
+1 0 0 1 36 107 Tm (      if \(!raw\) return null;) Tj
+1 0 0 1 36 96 Tm (      return JSON.parse\(raw\);) Tj
+1 0 0 1 36 85 Tm (    } catch \(err\) {) Tj
+1 0 0 1 36 74 Tm (      return null;) Tj
+1 0 0 1 36 63 Tm (    }) Tj
+1 0 0 1 36 52 Tm (  }) Tj
+1 0 0 1 36 41 Tm () Tj
+ET
+endstream
+endobj
+46 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R >> >> /Contents 47 0 R >>
+endobj
+47 0 obj
+<< /Length 3496 >>
+stream
+BT
+/F1 9 Tf
+1 0 0 1 36 756 Tm (  /** @private */) Tj
+1 0 0 1 36 745 Tm (  _parseFormEncoded\(body\) {) Tj
+1 0 0 1 36 734 Tm (    var out = {};) Tj
+1 0 0 1 36 723 Tm (    if \(!body\) return out;) Tj
+1 0 0 1 36 712 Tm (    body.split\('&'\).forEach\(function\(pair\) {) Tj
+1 0 0 1 36 701 Tm (      var tokens = pair.split\('='\);) Tj
+1 0 0 1 36 690 Tm (      var key = decodeURIComponent\(tokens[0] || ''\).replace\(/\\+/g, ' '\);) Tj
+1 0 0 1 36 679 Tm (      var rawValue = tokens.length > 1 ? tokens.slice\(1\).join\('='\) : '';) Tj
+1 0 0 1 36 668 Tm (      var value = decodeURIComponent\(rawValue\).replace\(/\\+/g, ' '\);) Tj
+1 0 0 1 36 657 Tm (      if \(key\) out[key] = value;) Tj
+1 0 0 1 36 646 Tm (    }\);) Tj
+1 0 0 1 36 635 Tm (    return out;) Tj
+1 0 0 1 36 624 Tm (  }) Tj
+1 0 0 1 36 613 Tm (}) Tj
+1 0 0 1 36 602 Tm () Tj
+1 0 0 1 36 591 Tm (```) Tj
+1 0 0 1 36 580 Tm () Tj
+1 0 0 1 36 569 Tm () Tj
+1 0 0 1 36 558 Tm (# 03_SlackService.gs) Tj
+1 0 0 1 36 547 Tm () Tj
+1 0 0 1 36 536 Tm (**Source path:** `slack_host/03_SlackService.gs`) Tj
+1 0 0 1 36 525 Tm () Tj
+1 0 0 1 36 514 Tm (```javascript) Tj
+1 0 0 1 36 503 Tm (/**) Tj
+1 0 0 1 36 492 Tm ( * Application service that orchestrates Slack routes into LMS services.) Tj
+1 0 0 1 36 481 Tm ( */) Tj
+1 0 0 1 36 470 Tm (class SlackService {) Tj
+1 0 0 1 36 459 Tm (  /**) Tj
+1 0 0 1 36 448 Tm (   * @param {LmsEnrollmentService} enrollmentService) Tj
+1 0 0 1 36 437 Tm (   * @param {WorkflowWebhookHandlers} workflowHandlers) Tj
+1 0 0 1 36 426 Tm (   * @param {ResultFormatter} resultFormatter) Tj
+1 0 0 1 36 415 Tm (   */) Tj
+1 0 0 1 36 404 Tm (  constructor\(enrollmentService, workflowHandlers, resultFormatter\) {) Tj
+1 0 0 1 36 393 Tm (    this._enrollment = enrollmentService;) Tj
+1 0 0 1 36 382 Tm (    this._workflow = workflowHandlers;) Tj
+1 0 0 1 36 371 Tm (    this._results = resultFormatter;) Tj
+1 0 0 1 36 360 Tm (  }) Tj
+1 0 0 1 36 349 Tm () Tj
+1 0 0 1 36 338 Tm (  /**) Tj
+1 0 0 1 36 327 Tm (   * @param {Object} context) Tj
+1 0 0 1 36 316 Tm (   * @param {Object} payload) Tj
+1 0 0 1 36 305 Tm (   * @return {Object}) Tj
+1 0 0 1 36 294 Tm (   */) Tj
+1 0 0 1 36 283 Tm (  handleSlashCommand\(context, payload\) {) Tj
+1 0 0 1 36 272 Tm (    if \(payload.command === '/enroll-student'\) {) Tj
+1 0 0 1 36 261 Tm (      var result = this._enrollment.enrollFromSlash\(context, payload\);) Tj
+1 0 0 1 36 250 Tm (      return result.ok ? this._results.success\(result.message, result.data, context\)) Tj
+1 0 0 1 36 239 Tm (        : this._results.failure\(result.code, result.message, context, result.data\);) Tj
+1 0 0 1 36 228 Tm (    }) Tj
+1 0 0 1 36 217 Tm () Tj
+1 0 0 1 36 206 Tm (    return this._results.failure\('UNSUPPORTED_COMMAND', 'Unsupported command: ' + payload.command, context, {}\);) Tj
+1 0 0 1 36 195 Tm (  }) Tj
+1 0 0 1 36 184 Tm () Tj
+1 0 0 1 36 173 Tm (  /**) Tj
+1 0 0 1 36 162 Tm (   * @param {Object} context) Tj
+1 0 0 1 36 151 Tm (   * @param {Object} payload) Tj
+1 0 0 1 36 140 Tm (   * @return {Object}) Tj
+1 0 0 1 36 129 Tm (   */) Tj
+1 0 0 1 36 118 Tm (  handleWorkflowWebhook\(context, payload\) {) Tj
+1 0 0 1 36 107 Tm (    var result = this._workflow.handle\(context, payload\);) Tj
+1 0 0 1 36 96 Tm (    return result.ok ? this._results.success\(result.message, result.data, context\)) Tj
+1 0 0 1 36 85 Tm (      : this._results.failure\(result.code, result.message, context, result.data\);) Tj
+1 0 0 1 36 74 Tm (  }) Tj
+1 0 0 1 36 63 Tm (}) Tj
+1 0 0 1 36 52 Tm () Tj
+1 0 0 1 36 41 Tm (```) Tj
+ET
+endstream
+endobj
+48 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R >> >> /Contents 49 0 R >>
+endobj
+49 0 obj
+<< /Length 3182 >>
+stream
+BT
+/F1 9 Tf
+1 0 0 1 36 756 Tm () Tj
+1 0 0 1 36 745 Tm () Tj
+1 0 0 1 36 734 Tm (# 04_SlackSecurity.gs) Tj
+1 0 0 1 36 723 Tm () Tj
+1 0 0 1 36 712 Tm (**Source path:** `slack_host/04_SlackSecurity.gs`) Tj
+1 0 0 1 36 701 Tm () Tj
+1 0 0 1 36 690 Tm (```javascript) Tj
+1 0 0 1 36 679 Tm (/**) Tj
+1 0 0 1 36 668 Tm ( * Host-layer security checks for Slack/webhook calls.) Tj
+1 0 0 1 36 657 Tm ( */) Tj
+1 0 0 1 36 646 Tm (class SlackSecurity {) Tj
+1 0 0 1 36 635 Tm (  /**) Tj
+1 0 0 1 36 624 Tm (   * @param {HostConfig} hostConfig) Tj
+1 0 0 1 36 613 Tm (   */) Tj
+1 0 0 1 36 602 Tm (  constructor\(hostConfig\) {) Tj
+1 0 0 1 36 591 Tm (    this._config = hostConfig;) Tj
+1 0 0 1 36 580 Tm (  }) Tj
+1 0 0 1 36 569 Tm () Tj
+1 0 0 1 36 558 Tm (  /**) Tj
+1 0 0 1 36 547 Tm (   * Best-effort request verification for Apps Script web-app requests.) Tj
+1 0 0 1 36 536 Tm (   * Uses passcode from query/form when available.) Tj
+1 0 0 1 36 525 Tm (   *) Tj
+1 0 0 1 36 514 Tm (   * @param {{routeType: string, payload: Object, envelope: Object}} parsed) Tj
+1 0 0 1 36 503 Tm (   * @return {{ok: boolean, code: string, message: string}}) Tj
+1 0 0 1 36 492 Tm (   */) Tj
+1 0 0 1 36 481 Tm (  verify\(parsed\) {) Tj
+1 0 0 1 36 470 Tm (    var configured = this._config.getAppPasscode\(\);) Tj
+1 0 0 1 36 459 Tm (    if \(!configured\) {) Tj
+1 0 0 1 36 448 Tm (      return { ok: true, code: 'NO_PASSCODE_CONFIGURED', message: 'Passcode check skipped.' };) Tj
+1 0 0 1 36 437 Tm (    }) Tj
+1 0 0 1 36 426 Tm () Tj
+1 0 0 1 36 415 Tm (    var params = \(parsed.envelope && parsed.envelope.params\) ? parsed.envelope.params : {};) Tj
+1 0 0 1 36 404 Tm (    var supplied = String\(params.passcode || params.api_key || ''\);) Tj
+1 0 0 1 36 393 Tm (    if \(supplied && supplied === configured\) {) Tj
+1 0 0 1 36 382 Tm (      return { ok: true, code: 'AUTHORIZED', message: 'Passcode validated.' };) Tj
+1 0 0 1 36 371 Tm (    }) Tj
+1 0 0 1 36 360 Tm () Tj
+1 0 0 1 36 349 Tm (    return { ok: false, code: 'UNAUTHORIZED', message: 'Invalid or missing passcode.' };) Tj
+1 0 0 1 36 338 Tm (  }) Tj
+1 0 0 1 36 327 Tm (}) Tj
+1 0 0 1 36 316 Tm () Tj
+1 0 0 1 36 305 Tm (```) Tj
+1 0 0 1 36 294 Tm () Tj
+1 0 0 1 36 283 Tm () Tj
+1 0 0 1 36 272 Tm (# 05_LmsEnrollmentService.gs) Tj
+1 0 0 1 36 261 Tm () Tj
+1 0 0 1 36 250 Tm (**Source path:** `slack_host/05_LmsEnrollmentService.gs`) Tj
+1 0 0 1 36 239 Tm () Tj
+1 0 0 1 36 228 Tm (```javascript) Tj
+1 0 0 1 36 217 Tm (/**) Tj
+1 0 0 1 36 206 Tm ( * LMS enrollment operations implemented using the SheetDb library only.) Tj
+1 0 0 1 36 195 Tm ( */) Tj
+1 0 0 1 36 184 Tm (class LmsEnrollmentService {) Tj
+1 0 0 1 36 173 Tm (  /**) Tj
+1 0 0 1 36 162 Tm (   * @param {DbClient} db) Tj
+1 0 0 1 36 151 Tm (   */) Tj
+1 0 0 1 36 140 Tm (  constructor\(db\) {) Tj
+1 0 0 1 36 129 Tm (    this._db = db;) Tj
+1 0 0 1 36 118 Tm (  }) Tj
+1 0 0 1 36 107 Tm () Tj
+1 0 0 1 36 96 Tm (  /**) Tj
+1 0 0 1 36 85 Tm (   * Slash-command flow example:) Tj
+1 0 0 1 36 74 Tm (   * /enroll-student <studentId> <courseId>) Tj
+1 0 0 1 36 63 Tm (   *) Tj
+1 0 0 1 36 52 Tm (   * Upserts into `students` and `enrollments`, then writes audit log row.) Tj
+1 0 0 1 36 41 Tm (   * @param {Object} context) Tj
+ET
+endstream
+endobj
+50 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R >> >> /Contents 51 0 R >>
+endobj
+51 0 obj
+<< /Length 3799 >>
+stream
+BT
+/F1 9 Tf
+1 0 0 1 36 756 Tm (   * @param {Object} payload) Tj
+1 0 0 1 36 745 Tm (   * @return {Object}) Tj
+1 0 0 1 36 734 Tm (   */) Tj
+1 0 0 1 36 723 Tm (  enrollFromSlash\(context, payload\) {) Tj
+1 0 0 1 36 712 Tm (    var args = String\(payload.text || ''\).split\(/\\s+/\).filter\(function\(v\) { return !!v; }\);) Tj
+1 0 0 1 36 701 Tm (    if \(args.length < 2\) {) Tj
+1 0 0 1 36 690 Tm (      return { ok: false, code: 'INVALID_ARGUMENTS', message: 'Usage: /enroll-student <studentId> <courseId>', data: {} };) Tj
+1 0 0 1 36 679 Tm (    }) Tj
+1 0 0 1 36 668 Tm () Tj
+1 0 0 1 36 657 Tm (    var studentId = args[0];) Tj
+1 0 0 1 36 646 Tm (    var courseId = args[1];) Tj
+1 0 0 1 36 635 Tm (    var out = this._upsertEnrollment\(context, studentId, courseId, 'slash_command'\);) Tj
+1 0 0 1 36 624 Tm (    return out;) Tj
+1 0 0 1 36 613 Tm (  }) Tj
+1 0 0 1 36 602 Tm () Tj
+1 0 0 1 36 591 Tm (  /**) Tj
+1 0 0 1 36 580 Tm (   * Workflow webhook flow example for enrollment updates/inserts.) Tj
+1 0 0 1 36 569 Tm (   * @param {Object} context) Tj
+1 0 0 1 36 558 Tm (   * @param {Object} payload) Tj
+1 0 0 1 36 547 Tm (   * @return {Object}) Tj
+1 0 0 1 36 536 Tm (   */) Tj
+1 0 0 1 36 525 Tm (  upsertFromWorkflow\(context, payload\) {) Tj
+1 0 0 1 36 514 Tm (    if \(!payload.studentId || !payload.courseId\) {) Tj
+1 0 0 1 36 503 Tm (      return { ok: false, code: 'INVALID_WORKFLOW_PAYLOAD', message: 'studentId and courseId are required.', data: {} };) Tj
+1 0 0 1 36 492 Tm (    }) Tj
+1 0 0 1 36 481 Tm () Tj
+1 0 0 1 36 470 Tm (    return this._upsertEnrollment\(context, payload.studentId, payload.courseId, 'workflow_webhook', payload.status || 'enrolled'\);) Tj
+1 0 0 1 36 459 Tm (  }) Tj
+1 0 0 1 36 448 Tm () Tj
+1 0 0 1 36 437 Tm (  /** @private */) Tj
+1 0 0 1 36 426 Tm (  _upsertEnrollment\(context, studentId, courseId, source, status\) {) Tj
+1 0 0 1 36 415 Tm (    var students = this._db.table\('students'\);) Tj
+1 0 0 1 36 404 Tm (    var enrollments = this._db.table\('enrollments'\);) Tj
+1 0 0 1 36 393 Tm (    var audit = this._db.table\('audit_logs'\);) Tj
+1 0 0 1 36 382 Tm (    var finalStatus = status || 'enrolled';) Tj
+1 0 0 1 36 371 Tm (    var enrollmentRecord;) Tj
+1 0 0 1 36 360 Tm () Tj
+1 0 0 1 36 349 Tm (    this._db.transaction\(function\(\) {) Tj
+1 0 0 1 36 338 Tm (      var existingStudent = students.findById\(studentId\);) Tj
+1 0 0 1 36 327 Tm (      if \(!existingStudent\) {) Tj
+1 0 0 1 36 316 Tm (        students.insert\({ id: studentId, name: studentId, source: source }\);) Tj
+1 0 0 1 36 305 Tm (      }) Tj
+1 0 0 1 36 294 Tm () Tj
+1 0 0 1 36 283 Tm (      var existingEnrollment = enrollments.findAll\(\).filter\(function\(r\) {) Tj
+1 0 0 1 36 272 Tm (        return r.studentId === studentId && r.courseId === courseId;) Tj
+1 0 0 1 36 261 Tm (      }\)[0];) Tj
+1 0 0 1 36 250 Tm () Tj
+1 0 0 1 36 239 Tm (      if \(existingEnrollment\) {) Tj
+1 0 0 1 36 228 Tm (        enrollmentRecord = enrollments.update\(existingEnrollment.id, {) Tj
+1 0 0 1 36 217 Tm (          status: finalStatus,) Tj
+1 0 0 1 36 206 Tm (          source: source) Tj
+1 0 0 1 36 195 Tm (        }\);) Tj
+1 0 0 1 36 184 Tm (      } else {) Tj
+1 0 0 1 36 173 Tm (        enrollmentRecord = enrollments.insert\({) Tj
+1 0 0 1 36 162 Tm (          studentId: studentId,) Tj
+1 0 0 1 36 151 Tm (          courseId: courseId,) Tj
+1 0 0 1 36 140 Tm (          status: finalStatus,) Tj
+1 0 0 1 36 129 Tm (          source: source) Tj
+1 0 0 1 36 118 Tm (        }\);) Tj
+1 0 0 1 36 107 Tm (      }) Tj
+1 0 0 1 36 96 Tm () Tj
+1 0 0 1 36 85 Tm (      audit.insert\({) Tj
+1 0 0 1 36 74 Tm (        requestId: context.requestId,) Tj
+1 0 0 1 36 63 Tm (        source: context.source,) Tj
+1 0 0 1 36 52 Tm (        action: 'enrollment_upsert',) Tj
+1 0 0 1 36 41 Tm (        status: 'success',) Tj
+ET
+endstream
+endobj
+52 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R >> >> /Contents 53 0 R >>
+endobj
+53 0 obj
+<< /Length 3261 >>
+stream
+BT
+/F1 9 Tf
+1 0 0 1 36 756 Tm (        message: 'Enrollment upsert completed.',) Tj
+1 0 0 1 36 745 Tm (        metadata: JSON.stringify\({ studentId: studentId, courseId: courseId, enrollmentId: enrollmentRecord.id }\)) Tj
+1 0 0 1 36 734 Tm (      }\);) Tj
+1 0 0 1 36 723 Tm (    }\);) Tj
+1 0 0 1 36 712 Tm () Tj
+1 0 0 1 36 701 Tm (    this._db.audit\('enrollment_upsert', 'enrollments', {) Tj
+1 0 0 1 36 690 Tm (      requestId: context.requestId,) Tj
+1 0 0 1 36 679 Tm (      studentId: studentId,) Tj
+1 0 0 1 36 668 Tm (      courseId: courseId,) Tj
+1 0 0 1 36 657 Tm (      enrollmentId: enrollmentRecord.id) Tj
+1 0 0 1 36 646 Tm (    }\);) Tj
+1 0 0 1 36 635 Tm () Tj
+1 0 0 1 36 624 Tm (    return {) Tj
+1 0 0 1 36 613 Tm (      ok: true,) Tj
+1 0 0 1 36 602 Tm (      code: 'ENROLLMENT_UPSERTED',) Tj
+1 0 0 1 36 591 Tm (      message: 'Enrollment upserted successfully.',) Tj
+1 0 0 1 36 580 Tm (      data: {) Tj
+1 0 0 1 36 569 Tm (        enrollmentId: enrollmentRecord.id,) Tj
+1 0 0 1 36 558 Tm (        studentId: studentId,) Tj
+1 0 0 1 36 547 Tm (        courseId: courseId,) Tj
+1 0 0 1 36 536 Tm (        status: enrollmentRecord.status) Tj
+1 0 0 1 36 525 Tm (      }) Tj
+1 0 0 1 36 514 Tm (    };) Tj
+1 0 0 1 36 503 Tm (  }) Tj
+1 0 0 1 36 492 Tm (}) Tj
+1 0 0 1 36 481 Tm () Tj
+1 0 0 1 36 470 Tm (```) Tj
+1 0 0 1 36 459 Tm () Tj
+1 0 0 1 36 448 Tm () Tj
+1 0 0 1 36 437 Tm (# 06_LmsAutomationService.gs) Tj
+1 0 0 1 36 426 Tm () Tj
+1 0 0 1 36 415 Tm (**Source path:** `slack_host/06_LmsAutomationService.gs`) Tj
+1 0 0 1 36 404 Tm () Tj
+1 0 0 1 36 393 Tm (```javascript) Tj
+1 0 0 1 36 382 Tm (/**) Tj
+1 0 0 1 36 371 Tm ( * LMS automation operations that persist workflow state via SheetDb.) Tj
+1 0 0 1 36 360 Tm ( */) Tj
+1 0 0 1 36 349 Tm (class LmsAutomationService {) Tj
+1 0 0 1 36 338 Tm (  /**) Tj
+1 0 0 1 36 327 Tm (   * @param {DbClient} db) Tj
+1 0 0 1 36 316 Tm (   */) Tj
+1 0 0 1 36 305 Tm (  constructor\(db\) {) Tj
+1 0 0 1 36 294 Tm (    this._db = db;) Tj
+1 0 0 1 36 283 Tm (  }) Tj
+1 0 0 1 36 272 Tm () Tj
+1 0 0 1 36 261 Tm (  /**) Tj
+1 0 0 1 36 250 Tm (   * Inserts/updates an automation row and writes an audit log row.) Tj
+1 0 0 1 36 239 Tm (   * @param {Object} context) Tj
+1 0 0 1 36 228 Tm (   * @param {Object} payload) Tj
+1 0 0 1 36 217 Tm (   * @return {Object}) Tj
+1 0 0 1 36 206 Tm (   */) Tj
+1 0 0 1 36 195 Tm (  upsertAutomation\(context, payload\) {) Tj
+1 0 0 1 36 184 Tm (    var automations = this._db.table\('automations'\);) Tj
+1 0 0 1 36 173 Tm (    var audit = this._db.table\('audit_logs'\);) Tj
+1 0 0 1 36 162 Tm (    var workflow = payload.workflow || 'unknown_workflow';) Tj
+1 0 0 1 36 151 Tm (    var eventType = payload.eventType || 'workflow_event';) Tj
+1 0 0 1 36 140 Tm (    var state = payload.status || 'received';) Tj
+1 0 0 1 36 129 Tm () Tj
+1 0 0 1 36 118 Tm (    var existing = automations.findAll\(\).filter\(function\(r\) {) Tj
+1 0 0 1 36 107 Tm (      return r.workflow === workflow && r.requestId === payload.requestId;) Tj
+1 0 0 1 36 96 Tm (    }\)[0];) Tj
+1 0 0 1 36 85 Tm () Tj
+1 0 0 1 36 74 Tm (    var row;) Tj
+1 0 0 1 36 63 Tm (    if \(existing\) {) Tj
+1 0 0 1 36 52 Tm (      row = automations.update\(existing.id, { eventType: eventType, state: state }\);) Tj
+1 0 0 1 36 41 Tm (    } else {) Tj
+ET
+endstream
+endobj
+54 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R >> >> /Contents 55 0 R >>
+endobj
+55 0 obj
+<< /Length 3117 >>
+stream
+BT
+/F1 9 Tf
+1 0 0 1 36 756 Tm (      row = automations.insert\({ requestId: payload.requestId, workflow: workflow, eventType: eventType, state: state }\);) Tj
+1 0 0 1 36 745 Tm (    }) Tj
+1 0 0 1 36 734 Tm () Tj
+1 0 0 1 36 723 Tm (    audit.insert\({) Tj
+1 0 0 1 36 712 Tm (      requestId: context.requestId,) Tj
+1 0 0 1 36 701 Tm (      source: context.source,) Tj
+1 0 0 1 36 690 Tm (      action: 'automation_upsert',) Tj
+1 0 0 1 36 679 Tm (      status: 'success',) Tj
+1 0 0 1 36 668 Tm (      message: 'Automation row upserted.',) Tj
+1 0 0 1 36 657 Tm (      metadata: JSON.stringify\({ automationId: row.id, workflow: workflow, eventType: eventType }\)) Tj
+1 0 0 1 36 646 Tm (    }\);) Tj
+1 0 0 1 36 635 Tm () Tj
+1 0 0 1 36 624 Tm (    return {) Tj
+1 0 0 1 36 613 Tm (      ok: true,) Tj
+1 0 0 1 36 602 Tm (      code: 'AUTOMATION_UPSERTED',) Tj
+1 0 0 1 36 591 Tm (      message: 'Automation row upserted.',) Tj
+1 0 0 1 36 580 Tm (      data: { automationId: row.id, workflow: workflow, eventType: eventType, state: row.state }) Tj
+1 0 0 1 36 569 Tm (    };) Tj
+1 0 0 1 36 558 Tm (  }) Tj
+1 0 0 1 36 547 Tm (}) Tj
+1 0 0 1 36 536 Tm () Tj
+1 0 0 1 36 525 Tm (```) Tj
+1 0 0 1 36 514 Tm () Tj
+1 0 0 1 36 503 Tm () Tj
+1 0 0 1 36 492 Tm (# 07_RequestContextFactory.gs) Tj
+1 0 0 1 36 481 Tm () Tj
+1 0 0 1 36 470 Tm (**Source path:** `slack_host/07_RequestContextFactory.gs`) Tj
+1 0 0 1 36 459 Tm () Tj
+1 0 0 1 36 448 Tm (```javascript) Tj
+1 0 0 1 36 437 Tm (/**) Tj
+1 0 0 1 36 426 Tm ( * Creates normalized request-context objects for host handlers.) Tj
+1 0 0 1 36 415 Tm ( */) Tj
+1 0 0 1 36 404 Tm (class RequestContextFactory {) Tj
+1 0 0 1 36 393 Tm (  /**) Tj
+1 0 0 1 36 382 Tm (   * @param {HostConfig} hostConfig) Tj
+1 0 0 1 36 371 Tm (   */) Tj
+1 0 0 1 36 360 Tm (  constructor\(hostConfig\) {) Tj
+1 0 0 1 36 349 Tm (    this._config = hostConfig;) Tj
+1 0 0 1 36 338 Tm (  }) Tj
+1 0 0 1 36 327 Tm () Tj
+1 0 0 1 36 316 Tm (  /**) Tj
+1 0 0 1 36 305 Tm (   * @param {string} routeType) Tj
+1 0 0 1 36 294 Tm (   * @param {Object} payload) Tj
+1 0 0 1 36 283 Tm (   * @param {Object=} envelope) Tj
+1 0 0 1 36 272 Tm (   * @return {Object}) Tj
+1 0 0 1 36 261 Tm (   */) Tj
+1 0 0 1 36 250 Tm (  create\(routeType, payload, envelope\) {) Tj
+1 0 0 1 36 239 Tm (    var env = envelope || {};) Tj
+1 0 0 1 36 228 Tm (    return {) Tj
+1 0 0 1 36 217 Tm (      requestId: payload.requestId || Util.generateId\('req'\),) Tj
+1 0 0 1 36 206 Tm (      receivedAt: Util.nowIso\(\),) Tj
+1 0 0 1 36 195 Tm (      routeType: routeType,) Tj
+1 0 0 1 36 184 Tm (      source: routeType,) Tj
+1 0 0 1 36 173 Tm (      actorId: payload.userId || payload.actorId || 'unknown',) Tj
+1 0 0 1 36 162 Tm (      teamId: payload.teamId || '',) Tj
+1 0 0 1 36 151 Tm (      channelId: payload.channelId || this._config.getSlackDefaultChannel\(\),) Tj
+1 0 0 1 36 140 Tm (      raw: env.rawBody || '') Tj
+1 0 0 1 36 129 Tm (    };) Tj
+1 0 0 1 36 118 Tm (  }) Tj
+1 0 0 1 36 107 Tm (}) Tj
+1 0 0 1 36 96 Tm () Tj
+1 0 0 1 36 85 Tm (```) Tj
+1 0 0 1 36 74 Tm () Tj
+1 0 0 1 36 63 Tm () Tj
+1 0 0 1 36 52 Tm (# 08_ResultFormatter.gs) Tj
+1 0 0 1 36 41 Tm () Tj
+ET
+endstream
+endobj
+56 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R >> >> /Contents 57 0 R >>
+endobj
+57 0 obj
+<< /Length 2985 >>
+stream
+BT
+/F1 9 Tf
+1 0 0 1 36 756 Tm (**Source path:** `slack_host/08_ResultFormatter.gs`) Tj
+1 0 0 1 36 745 Tm () Tj
+1 0 0 1 36 734 Tm (```javascript) Tj
+1 0 0 1 36 723 Tm (/**) Tj
+1 0 0 1 36 712 Tm ( * Formats host operation results into structured Slack-friendly objects.) Tj
+1 0 0 1 36 701 Tm ( */) Tj
+1 0 0 1 36 690 Tm (class ResultFormatter {) Tj
+1 0 0 1 36 679 Tm (  /**) Tj
+1 0 0 1 36 668 Tm (   * @param {string} message) Tj
+1 0 0 1 36 657 Tm (   * @param {Object=} data) Tj
+1 0 0 1 36 646 Tm (   * @param {Object=} context) Tj
+1 0 0 1 36 635 Tm (   * @return {Object}) Tj
+1 0 0 1 36 624 Tm (   */) Tj
+1 0 0 1 36 613 Tm (  success\(message, data, context\) {) Tj
+1 0 0 1 36 602 Tm (    return {) Tj
+1 0 0 1 36 591 Tm (      ok: true,) Tj
+1 0 0 1 36 580 Tm (      code: 'OK',) Tj
+1 0 0 1 36 569 Tm (      message: message,) Tj
+1 0 0 1 36 558 Tm (      requestId: \(context && context.requestId\) || '',) Tj
+1 0 0 1 36 547 Tm (      data: data || {},) Tj
+1 0 0 1 36 536 Tm (      slack: {) Tj
+1 0 0 1 36 525 Tm (        response_type: 'ephemeral',) Tj
+1 0 0 1 36 514 Tm (        text: message) Tj
+1 0 0 1 36 503 Tm (      }) Tj
+1 0 0 1 36 492 Tm (    };) Tj
+1 0 0 1 36 481 Tm (  }) Tj
+1 0 0 1 36 470 Tm () Tj
+1 0 0 1 36 459 Tm (  /**) Tj
+1 0 0 1 36 448 Tm (   * @param {string} code) Tj
+1 0 0 1 36 437 Tm (   * @param {string} message) Tj
+1 0 0 1 36 426 Tm (   * @param {Object=} context) Tj
+1 0 0 1 36 415 Tm (   * @param {Object=} data) Tj
+1 0 0 1 36 404 Tm (   * @return {Object}) Tj
+1 0 0 1 36 393 Tm (   */) Tj
+1 0 0 1 36 382 Tm (  failure\(code, message, context, data\) {) Tj
+1 0 0 1 36 371 Tm (    return {) Tj
+1 0 0 1 36 360 Tm (      ok: false,) Tj
+1 0 0 1 36 349 Tm (      code: code || 'ERROR',) Tj
+1 0 0 1 36 338 Tm (      message: message || 'Unknown error.',) Tj
+1 0 0 1 36 327 Tm (      requestId: \(context && context.requestId\) || '',) Tj
+1 0 0 1 36 316 Tm (      data: data || {},) Tj
+1 0 0 1 36 305 Tm (      slack: {) Tj
+1 0 0 1 36 294 Tm (        response_type: 'ephemeral',) Tj
+1 0 0 1 36 283 Tm (        text: ':warning: ' + \(message || 'Unknown error.'\)) Tj
+1 0 0 1 36 272 Tm (      }) Tj
+1 0 0 1 36 261 Tm (    };) Tj
+1 0 0 1 36 250 Tm (  }) Tj
+1 0 0 1 36 239 Tm (}) Tj
+1 0 0 1 36 228 Tm () Tj
+1 0 0 1 36 217 Tm (```) Tj
+1 0 0 1 36 206 Tm () Tj
+1 0 0 1 36 195 Tm () Tj
+1 0 0 1 36 184 Tm (# 09_WorkflowWebhookHandlers.gs) Tj
+1 0 0 1 36 173 Tm () Tj
+1 0 0 1 36 162 Tm (**Source path:** `slack_host/09_WorkflowWebhookHandlers.gs`) Tj
+1 0 0 1 36 151 Tm () Tj
+1 0 0 1 36 140 Tm (```javascript) Tj
+1 0 0 1 36 129 Tm (/**) Tj
+1 0 0 1 36 118 Tm ( * Handles normalized workflow webhook events.) Tj
+1 0 0 1 36 107 Tm ( */) Tj
+1 0 0 1 36 96 Tm (class WorkflowWebhookHandlers {) Tj
+1 0 0 1 36 85 Tm (  /**) Tj
+1 0 0 1 36 74 Tm (   * @param {LmsEnrollmentService} enrollmentService) Tj
+1 0 0 1 36 63 Tm (   * @param {LmsAutomationService} automationService) Tj
+1 0 0 1 36 52 Tm (   */) Tj
+1 0 0 1 36 41 Tm (  constructor\(enrollmentService, automationService\) {) Tj
+ET
+endstream
+endobj
+58 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R >> >> /Contents 59 0 R >>
+endobj
+59 0 obj
+<< /Length 3212 >>
+stream
+BT
+/F1 9 Tf
+1 0 0 1 36 756 Tm (    this._enrollment = enrollmentService;) Tj
+1 0 0 1 36 745 Tm (    this._automation = automationService;) Tj
+1 0 0 1 36 734 Tm (  }) Tj
+1 0 0 1 36 723 Tm () Tj
+1 0 0 1 36 712 Tm (  /**) Tj
+1 0 0 1 36 701 Tm (   * @param {Object} context) Tj
+1 0 0 1 36 690 Tm (   * @param {Object} payload) Tj
+1 0 0 1 36 679 Tm (   * @return {Object}) Tj
+1 0 0 1 36 668 Tm (   */) Tj
+1 0 0 1 36 657 Tm (  handle\(context, payload\) {) Tj
+1 0 0 1 36 646 Tm (    if \(payload.eventType === 'enrollment_requested'\) {) Tj
+1 0 0 1 36 635 Tm (      return this._enrollment.upsertFromWorkflow\(context, payload\);) Tj
+1 0 0 1 36 624 Tm (    }) Tj
+1 0 0 1 36 613 Tm (    return this._automation.upsertAutomation\(context, payload\);) Tj
+1 0 0 1 36 602 Tm (  }) Tj
+1 0 0 1 36 591 Tm (}) Tj
+1 0 0 1 36 580 Tm () Tj
+1 0 0 1 36 569 Tm (```) Tj
+1 0 0 1 36 558 Tm () Tj
+1 0 0 1 36 547 Tm () Tj
+1 0 0 1 36 536 Tm (# 10_HostConfig.gs) Tj
+1 0 0 1 36 525 Tm () Tj
+1 0 0 1 36 514 Tm (**Source path:** `slack_host/10_HostConfig.gs`) Tj
+1 0 0 1 36 503 Tm () Tj
+1 0 0 1 36 492 Tm (```javascript) Tj
+1 0 0 1 36 481 Tm (/**) Tj
+1 0 0 1 36 470 Tm ( * Host-layer configuration backed by Script Properties.) Tj
+1 0 0 1 36 459 Tm ( */) Tj
+1 0 0 1 36 448 Tm (class HostConfig {) Tj
+1 0 0 1 36 437 Tm (  /**) Tj
+1 0 0 1 36 426 Tm (   * @param {ScriptPropertiesHelper=} helper) Tj
+1 0 0 1 36 415 Tm (   */) Tj
+1 0 0 1 36 404 Tm (  constructor\(helper\) {) Tj
+1 0 0 1 36 393 Tm (    this._props = helper || new ScriptPropertiesHelper\(\);) Tj
+1 0 0 1 36 382 Tm (  }) Tj
+1 0 0 1 36 371 Tm () Tj
+1 0 0 1 36 360 Tm (  /** @return {string} */) Tj
+1 0 0 1 36 349 Tm (  getAppPasscode\(\) { return this._props.get\('APP_PASSCODE', ''\); }) Tj
+1 0 0 1 36 338 Tm (  /** @return {string} */) Tj
+1 0 0 1 36 327 Tm (  getSigningSecret\(\) { return this._props.get\('SIGNING_SECRET', ''\); }) Tj
+1 0 0 1 36 316 Tm (  /** @return {string} */) Tj
+1 0 0 1 36 305 Tm (  getWebhookSecret\(\) { return this._props.get\('WEBHOOK_SECRET', ''\); }) Tj
+1 0 0 1 36 294 Tm (  /** @return {string} */) Tj
+1 0 0 1 36 283 Tm (  getApiKey\(\) { return this._props.get\('API_KEY', ''\); }) Tj
+1 0 0 1 36 272 Tm (  /** @return {string} */) Tj
+1 0 0 1 36 261 Tm (  getSlackBotToken\(\) { return this._props.get\('SLACK_BOT_TOKEN', ''\); }) Tj
+1 0 0 1 36 250 Tm (  /** @return {string} */) Tj
+1 0 0 1 36 239 Tm (  getSlackSigningSecret\(\) { return this._props.get\('SLACK_SIGNING_SECRET', this.getSigningSecret\(\)\); }) Tj
+1 0 0 1 36 228 Tm (  /** @return {string} */) Tj
+1 0 0 1 36 217 Tm (  getSlackDefaultChannel\(\) { return this._props.get\('SLACK_DEFAULT_CHANNEL', ''\); }) Tj
+1 0 0 1 36 206 Tm () Tj
+1 0 0 1 36 195 Tm (  /**) Tj
+1 0 0 1 36 184 Tm (   * @return {Object}) Tj
+1 0 0 1 36 173 Tm (   */) Tj
+1 0 0 1 36 162 Tm (  getClientOverrides\(\) {) Tj
+1 0 0 1 36 151 Tm (    return mergeClientOptionsWithScriptProperties\({}\);) Tj
+1 0 0 1 36 140 Tm (  }) Tj
+1 0 0 1 36 129 Tm (}) Tj
+1 0 0 1 36 118 Tm () Tj
+1 0 0 1 36 107 Tm (```) Tj
+1 0 0 1 36 96 Tm () Tj
+1 0 0 1 36 85 Tm () Tj
+1 0 0 1 36 74 Tm (# 11_HostTestHarness.gs) Tj
+1 0 0 1 36 63 Tm () Tj
+1 0 0 1 36 52 Tm (**Source path:** `slack_host/11_HostTestHarness.gs`) Tj
+1 0 0 1 36 41 Tm () Tj
+ET
+endstream
+endobj
+60 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R >> >> /Contents 61 0 R >>
+endobj
+61 0 obj
+<< /Length 3799 >>
+stream
+BT
+/F1 9 Tf
+1 0 0 1 36 756 Tm (```javascript) Tj
+1 0 0 1 36 745 Tm (/**) Tj
+1 0 0 1 36 734 Tm ( * Manual Apps Script test harness for the split Slack host architecture.) Tj
+1 0 0 1 36 723 Tm ( */) Tj
+1 0 0 1 36 712 Tm () Tj
+1 0 0 1 36 701 Tm (/**) Tj
+1 0 0 1 36 690 Tm ( * Builds host dependencies for manual tests.) Tj
+1 0 0 1 36 679 Tm ( * Uses TEST_SPREADSHEET_ID script property when available.) Tj
+1 0 0 1 36 668 Tm ( * @return {{db: DbClient, hostConfig: HostConfig, router: SlackRouter}}) Tj
+1 0 0 1 36 657 Tm ( */) Tj
+1 0 0 1 36 646 Tm (function _buildHostTestContext\(\) {) Tj
+1 0 0 1 36 635 Tm (  var props = new ScriptPropertiesHelper\(\);) Tj
+1 0 0 1 36 624 Tm (  var testSpreadsheetId = props.get\('TEST_SPREADSHEET_ID', ''\);) Tj
+1 0 0 1 36 613 Tm (  var options = testSpreadsheetId ? { spreadsheetId: testSpreadsheetId } : {};) Tj
+1 0 0 1 36 602 Tm () Tj
+1 0 0 1 36 591 Tm (  var db = SheetDb.createClientFromScriptProperties\(options\);) Tj
+1 0 0 1 36 580 Tm () Tj
+1 0 0 1 36 569 Tm (  db.schema\('students', {) Tj
+1 0 0 1 36 558 Tm (    columns: ['id', 'name', 'source', 'createdAt', 'updatedAt', 'deletedAt'],) Tj
+1 0 0 1 36 547 Tm (    fields: {) Tj
+1 0 0 1 36 536 Tm (      id: { required: true, type: 'string' },) Tj
+1 0 0 1 36 525 Tm (      name: { required: true, type: 'string' },) Tj
+1 0 0 1 36 514 Tm (      source: { default: 'slack', type: 'string' }) Tj
+1 0 0 1 36 503 Tm (    }) Tj
+1 0 0 1 36 492 Tm (  }\);) Tj
+1 0 0 1 36 481 Tm () Tj
+1 0 0 1 36 470 Tm (  db.schema\('enrollments', {) Tj
+1 0 0 1 36 459 Tm (    columns: ['id', 'studentId', 'courseId', 'status', 'source', 'createdAt', 'updatedAt', 'deletedAt'],) Tj
+1 0 0 1 36 448 Tm (    fields: {) Tj
+1 0 0 1 36 437 Tm (      studentId: { required: true, type: 'string' },) Tj
+1 0 0 1 36 426 Tm (      courseId: { required: true, type: 'string' },) Tj
+1 0 0 1 36 415 Tm (      status: { default: 'enrolled', type: 'string' },) Tj
+1 0 0 1 36 404 Tm (      source: { default: 'slack', type: 'string' }) Tj
+1 0 0 1 36 393 Tm (    }) Tj
+1 0 0 1 36 382 Tm (  }\);) Tj
+1 0 0 1 36 371 Tm () Tj
+1 0 0 1 36 360 Tm (  db.schema\('automations', {) Tj
+1 0 0 1 36 349 Tm (    columns: ['id', 'requestId', 'workflow', 'eventType', 'state', 'createdAt', 'updatedAt', 'deletedAt'],) Tj
+1 0 0 1 36 338 Tm (    fields: {) Tj
+1 0 0 1 36 327 Tm (      requestId: { required: true, type: 'string' },) Tj
+1 0 0 1 36 316 Tm (      workflow: { required: true, type: 'string' },) Tj
+1 0 0 1 36 305 Tm (      eventType: { required: true, type: 'string' },) Tj
+1 0 0 1 36 294 Tm (      state: { default: 'received', type: 'string' }) Tj
+1 0 0 1 36 283 Tm (    }) Tj
+1 0 0 1 36 272 Tm (  }\);) Tj
+1 0 0 1 36 261 Tm () Tj
+1 0 0 1 36 250 Tm (  db.schema\('audit_logs', {) Tj
+1 0 0 1 36 239 Tm (    columns: ['id', 'requestId', 'source', 'action', 'status', 'message', 'metadata', 'createdAt', 'updatedAt', 'deletedAt'],) Tj
+1 0 0 1 36 228 Tm (    fields: {) Tj
+1 0 0 1 36 217 Tm (      requestId: { required: true, type: 'string' },) Tj
+1 0 0 1 36 206 Tm (      source: { required: true, type: 'string' },) Tj
+1 0 0 1 36 195 Tm (      action: { required: true, type: 'string' },) Tj
+1 0 0 1 36 184 Tm (      status: { required: true, type: 'string' },) Tj
+1 0 0 1 36 173 Tm (      message: { type: 'string' },) Tj
+1 0 0 1 36 162 Tm (      metadata: { type: 'string' }) Tj
+1 0 0 1 36 151 Tm (    }) Tj
+1 0 0 1 36 140 Tm (  }\);) Tj
+1 0 0 1 36 129 Tm () Tj
+1 0 0 1 36 118 Tm (  var hostConfig = new HostConfig\(props\);) Tj
+1 0 0 1 36 107 Tm (  var router = createHostRouter\(db, hostConfig\);) Tj
+1 0 0 1 36 96 Tm (  return { db: db, hostConfig: hostConfig, router: router };) Tj
+1 0 0 1 36 85 Tm (}) Tj
+1 0 0 1 36 74 Tm () Tj
+1 0 0 1 36 63 Tm (/**) Tj
+1 0 0 1 36 52 Tm ( * Encodes form payload.) Tj
+1 0 0 1 36 41 Tm ( * @param {Object} obj) Tj
+ET
+endstream
+endobj
+62 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R >> >> /Contents 63 0 R >>
+endobj
+63 0 obj
+<< /Length 3350 >>
+stream
+BT
+/F1 9 Tf
+1 0 0 1 36 756 Tm ( * @return {string}) Tj
+1 0 0 1 36 745 Tm ( */) Tj
+1 0 0 1 36 734 Tm (function _toFormBody\(obj\) {) Tj
+1 0 0 1 36 723 Tm (  return Object.keys\(obj\).map\(function\(key\) {) Tj
+1 0 0 1 36 712 Tm (    return encodeURIComponent\(key\) + '=' + encodeURIComponent\(String\(obj[key]\)\);) Tj
+1 0 0 1 36 701 Tm (  }\).join\('&'\);) Tj
+1 0 0 1 36 690 Tm (}) Tj
+1 0 0 1 36 679 Tm () Tj
+1 0 0 1 36 668 Tm (/**) Tj
+1 0 0 1 36 657 Tm ( * Builds a mock DoPost event object.) Tj
+1 0 0 1 36 646 Tm ( * @param {string} body) Tj
+1 0 0 1 36 635 Tm ( * @return {GoogleAppsScript.Events.DoPost}) Tj
+1 0 0 1 36 624 Tm ( */) Tj
+1 0 0 1 36 613 Tm (function _mockDoPostEvent\(body\) {) Tj
+1 0 0 1 36 602 Tm (  return {) Tj
+1 0 0 1 36 591 Tm (    postData: {) Tj
+1 0 0 1 36 580 Tm (      contents: body,) Tj
+1 0 0 1 36 569 Tm (      type: 'application/x-www-form-urlencoded') Tj
+1 0 0 1 36 558 Tm (    }) Tj
+1 0 0 1 36 547 Tm (  };) Tj
+1 0 0 1 36 536 Tm (}) Tj
+1 0 0 1 36 525 Tm () Tj
+1 0 0 1 36 514 Tm (/**) Tj
+1 0 0 1 36 503 Tm ( * testSlashEnrollMock) Tj
+1 0 0 1 36 492 Tm ( * Simulates `/enroll-student` and runs full router path.) Tj
+1 0 0 1 36 481 Tm ( */) Tj
+1 0 0 1 36 470 Tm (function testSlashEnrollMock\(\) {) Tj
+1 0 0 1 36 459 Tm (  var ctx = _buildHostTestContext\(\);) Tj
+1 0 0 1 36 448 Tm (  var suffix = new Date\(\).getTime\(\);) Tj
+1 0 0 1 36 437 Tm (  var passcode = ctx.hostConfig.getAppPasscode\(\);) Tj
+1 0 0 1 36 426 Tm (  var payload = {) Tj
+1 0 0 1 36 415 Tm (    command: '/enroll-student',) Tj
+1 0 0 1 36 404 Tm (    text: 'student-' + suffix + ' course-' + suffix,) Tj
+1 0 0 1 36 393 Tm (    user_id: 'U_TEST_' + suffix,) Tj
+1 0 0 1 36 382 Tm (    team_id: 'T_TEST',) Tj
+1 0 0 1 36 371 Tm (    channel_id: 'C_TEST') Tj
+1 0 0 1 36 360 Tm (  };) Tj
+1 0 0 1 36 349 Tm (  if \(passcode\) {) Tj
+1 0 0 1 36 338 Tm (    payload.passcode = passcode;) Tj
+1 0 0 1 36 327 Tm (  }) Tj
+1 0 0 1 36 316 Tm () Tj
+1 0 0 1 36 305 Tm (  var event = _mockDoPostEvent\(_toFormBody\(payload\)\);) Tj
+1 0 0 1 36 294 Tm (  var result = ctx.router.handle\(event\);) Tj
+1 0 0 1 36 283 Tm (  Logger.log\('[testSlashEnrollMock] ' + JSON.stringify\(result\)\);) Tj
+1 0 0 1 36 272 Tm (}) Tj
+1 0 0 1 36 261 Tm () Tj
+1 0 0 1 36 250 Tm (/**) Tj
+1 0 0 1 36 239 Tm ( * testWorkflowEnrollmentMock) Tj
+1 0 0 1 36 228 Tm ( * Simulates `enrollment_requested` workflow webhook and runs full router path.) Tj
+1 0 0 1 36 217 Tm ( */) Tj
+1 0 0 1 36 206 Tm (function testWorkflowEnrollmentMock\(\) {) Tj
+1 0 0 1 36 195 Tm (  var ctx = _buildHostTestContext\(\);) Tj
+1 0 0 1 36 184 Tm (  var suffix = new Date\(\).getTime\(\);) Tj
+1 0 0 1 36 173 Tm (  var payload = {) Tj
+1 0 0 1 36 162 Tm (    workflow: 'lms_enrollment',) Tj
+1 0 0 1 36 151 Tm (    eventType: 'enrollment_requested',) Tj
+1 0 0 1 36 140 Tm (    requestId: 'wf_req_' + suffix,) Tj
+1 0 0 1 36 129 Tm (    data: {) Tj
+1 0 0 1 36 118 Tm (      studentId: 'wf-student-' + suffix,) Tj
+1 0 0 1 36 107 Tm (      courseId: 'wf-course-' + suffix,) Tj
+1 0 0 1 36 96 Tm (      actorId: 'WF_ACTOR') Tj
+1 0 0 1 36 85 Tm (    }) Tj
+1 0 0 1 36 74 Tm (  };) Tj
+1 0 0 1 36 63 Tm (  var event = _mockDoPostEvent\(JSON.stringify\(payload\)\);) Tj
+1 0 0 1 36 52 Tm (  var result = ctx.router.handle\(event\);) Tj
+1 0 0 1 36 41 Tm (  Logger.log\('[testWorkflowEnrollmentMock] ' + JSON.stringify\(result\)\);) Tj
+ET
+endstream
+endobj
+64 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R >> >> /Contents 65 0 R >>
+endobj
+65 0 obj
+<< /Length 3353 >>
+stream
+BT
+/F1 9 Tf
+1 0 0 1 36 756 Tm (}) Tj
+1 0 0 1 36 745 Tm () Tj
+1 0 0 1 36 734 Tm (/**) Tj
+1 0 0 1 36 723 Tm ( * testAutomationMock) Tj
+1 0 0 1 36 712 Tm ( * Simulates generic automation workflow webhook and runs full router path.) Tj
+1 0 0 1 36 701 Tm ( */) Tj
+1 0 0 1 36 690 Tm (function testAutomationMock\(\) {) Tj
+1 0 0 1 36 679 Tm (  var ctx = _buildHostTestContext\(\);) Tj
+1 0 0 1 36 668 Tm (  var suffix = new Date\(\).getTime\(\);) Tj
+1 0 0 1 36 657 Tm (  var payload = {) Tj
+1 0 0 1 36 646 Tm (    workflow: 'lms_automation',) Tj
+1 0 0 1 36 635 Tm (    eventType: 'automation_ping',) Tj
+1 0 0 1 36 624 Tm (    requestId: 'automation_req_' + suffix,) Tj
+1 0 0 1 36 613 Tm (    data: {) Tj
+1 0 0 1 36 602 Tm (      status: 'queued',) Tj
+1 0 0 1 36 591 Tm (      actorId: 'AUTO_ACTOR') Tj
+1 0 0 1 36 580 Tm (    }) Tj
+1 0 0 1 36 569 Tm (  };) Tj
+1 0 0 1 36 558 Tm (  var event = _mockDoPostEvent\(JSON.stringify\(payload\)\);) Tj
+1 0 0 1 36 547 Tm (  var result = ctx.router.handle\(event\);) Tj
+1 0 0 1 36 536 Tm (  Logger.log\('[testAutomationMock] ' + JSON.stringify\(result\)\);) Tj
+1 0 0 1 36 525 Tm (}) Tj
+1 0 0 1 36 514 Tm () Tj
+1 0 0 1 36 503 Tm (/**) Tj
+1 0 0 1 36 492 Tm ( * testHostConfig) Tj
+1 0 0 1 36 481 Tm ( * Verifies host config reads script properties without logging raw secrets.) Tj
+1 0 0 1 36 470 Tm ( */) Tj
+1 0 0 1 36 459 Tm (function testHostConfig\(\) {) Tj
+1 0 0 1 36 448 Tm (  var props = new ScriptPropertiesHelper\(\);) Tj
+1 0 0 1 36 437 Tm (  var hostConfig = new HostConfig\(props\);) Tj
+1 0 0 1 36 426 Tm (  var keys = [) Tj
+1 0 0 1 36 415 Tm (    'APP_PASSCODE',) Tj
+1 0 0 1 36 404 Tm (    'SIGNING_SECRET',) Tj
+1 0 0 1 36 393 Tm (    'WEBHOOK_SECRET',) Tj
+1 0 0 1 36 382 Tm (    'API_KEY',) Tj
+1 0 0 1 36 371 Tm (    'SLACK_BOT_TOKEN',) Tj
+1 0 0 1 36 360 Tm (    'SLACK_SIGNING_SECRET',) Tj
+1 0 0 1 36 349 Tm (    'SLACK_DEFAULT_CHANNEL') Tj
+1 0 0 1 36 338 Tm (  ];) Tj
+1 0 0 1 36 327 Tm () Tj
+1 0 0 1 36 316 Tm (  var values = {) Tj
+1 0 0 1 36 305 Tm (    APP_PASSCODE: hostConfig.getAppPasscode\(\),) Tj
+1 0 0 1 36 294 Tm (    SIGNING_SECRET: hostConfig.getSigningSecret\(\),) Tj
+1 0 0 1 36 283 Tm (    WEBHOOK_SECRET: hostConfig.getWebhookSecret\(\),) Tj
+1 0 0 1 36 272 Tm (    API_KEY: hostConfig.getApiKey\(\),) Tj
+1 0 0 1 36 261 Tm (    SLACK_BOT_TOKEN: hostConfig.getSlackBotToken\(\),) Tj
+1 0 0 1 36 250 Tm (    SLACK_SIGNING_SECRET: hostConfig.getSlackSigningSecret\(\),) Tj
+1 0 0 1 36 239 Tm (    SLACK_DEFAULT_CHANNEL: hostConfig.getSlackDefaultChannel\(\)) Tj
+1 0 0 1 36 228 Tm (  };) Tj
+1 0 0 1 36 217 Tm () Tj
+1 0 0 1 36 206 Tm (  var redacted = {};) Tj
+1 0 0 1 36 195 Tm (  keys.forEach\(function\(key\) {) Tj
+1 0 0 1 36 184 Tm (    var value = values[key] || '';) Tj
+1 0 0 1 36 173 Tm (    redacted[key] = ScriptPropertiesHelper.shouldRedactKey\(key\)) Tj
+1 0 0 1 36 162 Tm (      ? \(value ? '[REDACTED_SET]' : '[REDACTED_EMPTY]'\)) Tj
+1 0 0 1 36 151 Tm (      : value;) Tj
+1 0 0 1 36 140 Tm (  }\);) Tj
+1 0 0 1 36 129 Tm () Tj
+1 0 0 1 36 118 Tm (  Logger.log\('[testHostConfig] ' + JSON.stringify\(redacted\)\);) Tj
+1 0 0 1 36 107 Tm (}) Tj
+1 0 0 1 36 96 Tm () Tj
+1 0 0 1 36 85 Tm (/**) Tj
+1 0 0 1 36 74 Tm ( * testAuditWrite) Tj
+1 0 0 1 36 63 Tm ( * Executes one mutation and verifies an audit row is written.) Tj
+1 0 0 1 36 52 Tm ( */) Tj
+1 0 0 1 36 41 Tm (function testAuditWrite\(\) {) Tj
+ET
+endstream
+endobj
+66 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R >> >> /Contents 67 0 R >>
+endobj
+67 0 obj
+<< /Length 1530 >>
+stream
+BT
+/F1 9 Tf
+1 0 0 1 36 756 Tm (  var ctx = _buildHostTestContext\(\);) Tj
+1 0 0 1 36 745 Tm (  var auditTable = ctx.db.table\('audit_logs'\);) Tj
+1 0 0 1 36 734 Tm (  var before = auditTable.findAll\(\).length;) Tj
+1 0 0 1 36 723 Tm () Tj
+1 0 0 1 36 712 Tm (  var suffix = new Date\(\).getTime\(\);) Tj
+1 0 0 1 36 701 Tm (  var passcode = ctx.hostConfig.getAppPasscode\(\);) Tj
+1 0 0 1 36 690 Tm (  var payload = {) Tj
+1 0 0 1 36 679 Tm (    command: '/enroll-student',) Tj
+1 0 0 1 36 668 Tm (    text: 'audit-student-' + suffix + ' audit-course-' + suffix,) Tj
+1 0 0 1 36 657 Tm (    user_id: 'U_AUDIT_' + suffix,) Tj
+1 0 0 1 36 646 Tm (    team_id: 'T_AUDIT',) Tj
+1 0 0 1 36 635 Tm (    channel_id: 'C_AUDIT') Tj
+1 0 0 1 36 624 Tm (  };) Tj
+1 0 0 1 36 613 Tm (  if \(passcode\) {) Tj
+1 0 0 1 36 602 Tm (    payload.passcode = passcode;) Tj
+1 0 0 1 36 591 Tm (  }) Tj
+1 0 0 1 36 580 Tm () Tj
+1 0 0 1 36 569 Tm (  var event = _mockDoPostEvent\(_toFormBody\(payload\)\);) Tj
+1 0 0 1 36 558 Tm (  var result = ctx.router.handle\(event\);) Tj
+1 0 0 1 36 547 Tm (  var after = auditTable.findAll\(\).length;) Tj
+1 0 0 1 36 536 Tm () Tj
+1 0 0 1 36 525 Tm (  Logger.log\('[testAuditWrite] ' + JSON.stringify\({) Tj
+1 0 0 1 36 514 Tm (    mutationOk: !!result.ok,) Tj
+1 0 0 1 36 503 Tm (    auditRowsBefore: before,) Tj
+1 0 0 1 36 492 Tm (    auditRowsAfter: after,) Tj
+1 0 0 1 36 481 Tm (    auditRowDelta: after - before) Tj
+1 0 0 1 36 470 Tm (  }\)\);) Tj
+1 0 0 1 36 459 Tm (}) Tj
+1 0 0 1 36 448 Tm () Tj
+1 0 0 1 36 437 Tm (```) Tj
+ET
+endstream
+endobj
+xref
+0 68
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000331 00000 n 
+0000000399 00000 n 
+0000000525 00000 n 
+0000003786 00000 n 
+0000003912 00000 n 
+0000007201 00000 n 
+0000007327 00000 n 
+0000010407 00000 n 
+0000010535 00000 n 
+0000013965 00000 n 
+0000014093 00000 n 
+0000017165 00000 n 
+0000017293 00000 n 
+0000019997 00000 n 
+0000020125 00000 n 
+0000023218 00000 n 
+0000023346 00000 n 
+0000026690 00000 n 
+0000026818 00000 n 
+0000030244 00000 n 
+0000030372 00000 n 
+0000033857 00000 n 
+0000033985 00000 n 
+0000037480 00000 n 
+0000037608 00000 n 
+0000041714 00000 n 
+0000041842 00000 n 
+0000045060 00000 n 
+0000045188 00000 n 
+0000048020 00000 n 
+0000048148 00000 n 
+0000051586 00000 n 
+0000051714 00000 n 
+0000054911 00000 n 
+0000055039 00000 n 
+0000058673 00000 n 
+0000058801 00000 n 
+0000062338 00000 n 
+0000062466 00000 n 
+0000065947 00000 n 
+0000066075 00000 n 
+0000069600 00000 n 
+0000069728 00000 n 
+0000073480 00000 n 
+0000073608 00000 n 
+0000077157 00000 n 
+0000077285 00000 n 
+0000080520 00000 n 
+0000080648 00000 n 
+0000084500 00000 n 
+0000084628 00000 n 
+0000087942 00000 n 
+0000088070 00000 n 
+0000091240 00000 n 
+0000091368 00000 n 
+0000094406 00000 n 
+0000094534 00000 n 
+0000097799 00000 n 
+0000097927 00000 n 
+0000101779 00000 n 
+0000101907 00000 n 
+0000105310 00000 n 
+0000105438 00000 n 
+0000108844 00000 n 
+0000108972 00000 n 
+trailer
+<< /Size 68 /Root 1 0 R >>
+startxref
+110555
+%%EOF
