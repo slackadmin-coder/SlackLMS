@@ -73,6 +73,17 @@ function _sheetDbHealthCheck() {
 }
 
 /**
+ * Creates a client using Script Properties with optional explicit overrides.
+ * Precedence: explicit options > script properties > defaults.
+ * @param {Object=} options
+ * @return {DbClient}
+ */
+function _sheetDbCreateClientFromScriptProperties(options) {
+  var merged = mergeClientOptionsWithScriptProperties(options || {});
+  return _sheetDbCreateClient(merged);
+}
+
+/**
  * Public Apps Script library namespace.
  *
  * Consumers should call library exports through this object:
@@ -80,6 +91,7 @@ function _sheetDbHealthCheck() {
  *
  * @type {{
  *   createClient: function(Object=): DbClient,
+ *   createClientFromScriptProperties: function(Object=): DbClient,
  *   bootstrap: function(Object=): DbClient,
  *   healthCheck: function(): Object,
  *   version: string
@@ -88,6 +100,10 @@ function _sheetDbHealthCheck() {
 var SheetDb = {
   createClient: function(options) {
     return _sheetDbCreateClient(options);
+  },
+
+  createClientFromScriptProperties: function(options) {
+    return _sheetDbCreateClientFromScriptProperties(options);
   },
 
   bootstrap: function(options) {

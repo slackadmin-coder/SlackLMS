@@ -10,7 +10,7 @@ class DbClient {
     this._schemas = new SchemaRegistry();
     this._sheets = new SheetsGateway(this._config);
     this._audit = new AuditLogger();
-    this._tx = new TransactionManager();
+    this._tx = new TransactionManager(this._config.lockTimeoutMs);
   }
 
   /**

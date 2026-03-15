@@ -9,6 +9,7 @@ class Config {
    * @param {string=} options.createdAtColumn Created timestamp column name.
    * @param {string=} options.updatedAtColumn Updated timestamp column name.
    * @param {string=} options.deletedAtColumn Soft-delete timestamp column name.
+   * @param {number=} options.lockTimeoutMs Lock acquisition timeout for transactions.
    */
   constructor(options) {
     var opts = options || {};
@@ -17,6 +18,7 @@ class Config {
     this.createdAtColumn = opts.createdAtColumn || 'createdAt';
     this.updatedAtColumn = opts.updatedAtColumn || 'updatedAt';
     this.deletedAtColumn = opts.deletedAtColumn || 'deletedAt';
+    this.lockTimeoutMs = Util.isNil(opts.lockTimeoutMs) ? 30000 : Number(opts.lockTimeoutMs);
     this.validate();
     Object.freeze(this);
   }
@@ -41,5 +43,9 @@ class Config {
       }
       unique[column] = true;
     });
+
+    if (isNaN(this.lockTimeoutMs) || this.lockTimeoutMs <= 0) {
+      throw new ConfigError('lockTimeoutMs must be a positive number.');
+    }
   }
 }
