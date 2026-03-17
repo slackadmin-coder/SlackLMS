@@ -1,122 +1,140 @@
-# Operations Runbook (Simple, Step-by-Step)
+# Runbook
 
-This runbook is for day-to-day support.
+## 1. System Overview (Ops View)
+### What runs daily
+- `runDailyLessonDelivery()` delivers queued lessons.
 
-## Service overview
+### What runs hourly
+- `runHourlyReminderCheck()` sends reminders for overdue learners.
 
-The service accepts requests and writes to Google Sheets tables:
-- `students`
-- `enrollments`
-- `automations`
-- `audit_logs`
+### What runs on-demand
+- Slack ingress via `doPost(e)` for slash commands, events, and interactivity.
+- `runWeeklyAdminReport()` and `runHealthCheck()` can be manually executed.
+- Host harness functions can be run from script editor for diagnostics.
 
-Main user action:
-- Slack command `/enroll-student <studentId> <courseId>`
+## 2. Daily Operations
+1. Monitor lesson delivery run result (`runDailyLessonDelivery`).
+2. Check `audit_log` for failed/denied request patterns.
+3. Verify Slack send success from API result patterns and retry queue growth.
+4. Review `delivery_queue` for rows stuck in `queued` unexpectedly.
 
----
+## 3. Hourly Operations
+1. Validate reminder job executed (`runHourlyReminderCheck`).
+2. Check `retry_queue` depth and age distribution.
+3. Review recent Slack API failures from health/audit entries.
+4. Confirm no sustained backlog in overdue learner reminders.
 
-## Normal operation checklist (daily)
+## 4. Weekly Operations
+1. Run/validate `runWeeklyAdminReport` output.
+2. Check cohort progress consistency (`completed`, `submitted`, `overdue`).
+3. Data integrity checks:
+   - learner records have valid `slackUserId`
+   - enrollment rows align to learner IDs
+   - progress rows map to known lessons
 
-1. Open the spreadsheet.
-2. Check `audit_logs` for new rows.
-3. Confirm most recent rows have `status = success`.
-4. If failures exist, use the troubleshooting section below.
+## 5. Incident Response Playbooks
 
----
+### Slack Not Responding
+1. Verify Apps Script deployment URL is active.
+2. Confirm Slack app is installed in workspace.
+3. Check Apps Script executions/logs for incoming requests.
+4. Re-deploy web app if deployment was revoked or outdated.
 
-## Troubleshooting quick map
+### Slash Command Fails
+1. Verify slash command endpoint in Slack app settings.
+2. Check Script Properties required keys.
+3. Inspect parser output using host harness slash tests.
+4. Validate security verification path (signature or fallback token).
 
-### Symptom: Slack says unauthorized / invalid passcode
-Likely cause:
-- `APP_PASSCODE` not set correctly, or caller not sending the same value.
+### Interactivity Timeout
+1. Ensure interactivity responses return quickly (<3s).
+2. Check router dispatch for `interactivity` route.
+3. Verify payload parse and action/callback/type handling.
+4. Offload heavy logic to queue/scheduler path where needed.
 
-Fix:
-1. Open Apps Script → Script Properties.
-2. Confirm `APP_PASSCODE` is present.
-3. Confirm caller sends matching value as `passcode` or `api_key`.
-4. Re-test.
+### Bot Cannot DM User
+1. Ensure user has interacted with bot / app installed scope is valid.
+2. Validate `conversations.open` response in `SlackApiClient.openDm`.
+3. Confirm Slack scopes include required IM/chat permissions.
 
-### Symptom: Error about invalid arguments
-Likely cause:
-- Command missing student or course.
+### Scheduler Not Running
+1. Check trigger list in Apps Script project.
+2. Re-run `setupTriggers()`.
+3. Verify Apps Script permissions/authorization for trigger owner.
+4. Confirm lock contention is not blocking recurring jobs.
 
-Fix:
-- Use exactly: `/enroll-student <studentId> <courseId>`
+### Duplicate Lessons Sent
+1. Inspect `delivery_queue` and duplicate queued rows.
+2. Check idempotency strategy for queue insertion and submit keys.
+3. Verify state transitions in `LearnerProgressStateMachine`.
 
-### Symptom: No new rows in spreadsheet
-Likely cause:
-- Wrong `SHEET_DB_SPREADSHEET_ID`, permission issue, or wrong deployment URL.
+### Data Not Updating
+1. Verify runtime sheet tab names exist and are writable.
+2. Confirm `SPREADSHEET_ID` targets expected sheet.
+3. Check `SheetDb` client initialization and table schema registration.
+4. Verify script execution identity has edit access.
 
-Fix:
-1. Confirm script property `SHEET_DB_SPREADSHEET_ID` matches the target sheet.
-2. Confirm script owner has edit access to that sheet.
-3. Confirm Slack command points to current deployment URL.
-4. Re-deploy web app if needed.
+## 6. Retry and Recovery
+- Retry policy is centralized in `RetryResolver`.
+- Retryable Slack/API failures are queued through `scheduleRetry`.
+- Manual reprocess pattern:
+  1. Inspect due rows (`resolveDueRetries`).
+  2. Re-run job payload through appropriate service.
+  3. Update attempts/status via `markAttempt`.
+- Stuck jobs can be moved to dead-letter status after max attempts.
 
-### Symptom: Same command works sometimes, fails sometimes
-Likely cause:
-- Temporary lock/contention or malformed payload from source.
+## 7. Manual Overrides
+- Manually trigger lesson delivery: run `runDailyLessonDelivery()`.
+- Manually mark lesson complete: update `learner_progress` row carefully (Verify in code).
+- Manually enroll learner: run enrollment service path through command/harness and verify `learners` + `enrollment` rows.
 
-Fix:
-1. Retry once.
-2. Check latest `audit_logs` row message.
-3. If repeated, capture timestamp + request details and escalate.
+## 8. Logs and Observability
+- **Apps Script execution logs:** ingress and function execution traces.
+- **`audit_log` table:** structured operations and status metadata.
+- **Queue tables:** `delivery_queue`, `retry_queue` for asynchronous state visibility.
+- Request tracing approach:
+  - correlate by row IDs (audit/submission/queue IDs) and timestamps.
+  - Verify in code if additional correlation key is introduced.
 
----
+## 9. Health Monitoring
+Check these metrics regularly:
+- failed Slack API calls
+- queue backlog (`delivery_queue`, `retry_queue`)
+- overdue learner count
+- scheduler run success/failure
+- config validation + SheetDb health snapshot
 
-## Incident response procedure
+Use `runHealthCheck()` / `HealthMonitor.getSnapshot()` for consolidated status.
 
-When a user reports “enrollment failed”:
+## 10. Maintenance Tasks
+- Clean old audit/queue logs based on retention policy.
+- Rotate secrets in Script Properties:
+  - `SLACK_BOT_TOKEN`
+  - `SLACK_SIGNING_SECRET`
+  - optional fallback token
+- Re-run trigger setup after ownership/permission changes.
+- Review optional config defaults (`DEFAULT_COURSE_ID`, `DEFAULT_TRACK`).
 
-1. Collect:
-   - Approximate time
-   - studentId
-   - courseId
-   - Slack channel/user
-2. Check `audit_logs` around that time.
-3. Identify error code/message.
-4. Apply matching fix from Troubleshooting map.
-5. Re-run test command.
-6. Confirm row exists in `enrollments`.
-7. Close incident with summary.
+## 11. Safe Update Procedure
+1. Apply minimal scoped change in branch.
+2. Run syntax checks and host harness smoke tests.
+3. Deploy new web app version.
+4. Validate `/lesson`, `/submit`, `/progress`, app mention, and interactivity.
+5. Monitor logs/queues for 30-60 minutes.
+6. Roll back to prior Apps Script deployment if error rate increases.
 
----
+## 12. Escalation Path
+When escalating, include:
+- incident start time + timezone
+- affected workflow(s): slash/event/interactivity/scheduler
+- sample payload metadata (redacted)
+- relevant audit row IDs and timestamps
+- retry queue sample rows
+- recent deployment or config changes
 
-## Escalation template
+Notify:
+- Slack app owner/admin
+- Apps Script owner
+- LMS operations owner
 
-Use this message to escalate to engineering:
-
-- **Time window:**
-- **Environment:** production
-- **User command:**
-- **Observed error code/message:**
-- **Recent changes (deployment/property edits):**
-- **Impact (how many users blocked):**
-- **What has already been tried:**
-
----
-
-## Recovery steps for major outage
-
-If all commands are failing:
-
-1. Pause user comms: “We are investigating enrollment command issues.”
-2. Check latest deployment status in Apps Script.
-3. Roll back to last known good deployment version.
-4. Verify Script Properties still exist (especially `APP_PASSCODE`, `SHEET_DB_SPREADSHEET_ID`).
-5. Run a known test:
-   - `/enroll-student TEST-STUDENT TEST-COURSE`
-6. Confirm `audit_logs` + `enrollments` updated.
-7. Announce recovery.
-
----
-
-## Change management notes
-
-Any time you change config or deployment:
-- Record who changed it.
-- Record what changed.
-- Record why.
-- Run one test command immediately.
-
-Keep this history in your team’s ops tracker.
+If ownership is unclear, **Verify in code/repo ownership records**.
