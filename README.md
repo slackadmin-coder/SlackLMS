@@ -1,86 +1,108 @@
-# LMS Library (Plain-English Guide)
+# Slack LMS Automation
 
-This project is a **Google Apps Script backend** that helps a Slack command create/update student enrollments in a Google Sheet.
+## 1. Overview
+This repository implements a Slack LMS automation host on Google Apps Script and Google Sheets, with shared utilities provided by `LMSLibrary` (`sheet_db_lib`). Slack commands, events, and interactivity all enter through one Apps Script endpoint and are dispatched through modular parser/security/router/service layers.
 
-Think of it like this:
-- **Slack** is where a staff member sends a command.
-- **This app** receives that command and decides what to do.
-- **Google Sheets** is the storage database.
-- **Audit logs** are a history of what happened.
+## 2. Features
+- Single-ingress Slack webhook host (`doPost(e)`).
+- Slash command routing for:
+  - `/lesson`
+  - `/submit`
+  - `/progress`
+- Event callback routing for:
+  - `message.im`
+  - `app_mention`
+- Interactivity payload routing.
+- Runtime data persistence in Google Sheets tables.
+- Slack API wrapper with retry-friendly error shape.
+- Installable scheduler jobs for delivery, reminders, and reporting.
+- Health and retry scaffolds for operations.
 
----
+## 3. Architecture Summary
+High-level flow:
 
-## What this project does
+`Slack -> manifest.json endpoint -> code.gs#doPost -> SlackPayloadParser -> SlackSecurity -> SlackRouter -> SlackService + domain services -> SheetDb + SlackApiClient`
 
-### 1) Accepts a Slack command
-A person can run:
+Key principle: keep ingress thin and move behavior into modular services.
 
-`/enroll-student <studentId> <courseId>`
+## 4. Repo Structure
+- `code.gs` — anchor web app entrypoint (thin host shell).
+- `00_WebAppEntry.gs` — dependency and DB bootstrap.
+- `01`–`04` — router/parser/security/dispatch layers.
+- `05`–`10` — LMS domain service scaffolds.
+- `11`–`13` — Slack API client, Block Kit builders, state machine.
+- `14`–`19` — scheduler, sync, config, health, retry, test harness.
+- `manifest.json` — Slack app manifest.
+- `sheet_db_lib/` — shared library (DB/config/audit helpers).
+- `md_mirror/`, `pdf_mirror/` — mirrored reference docs.
 
-Example:
+## 5. Workflows
+Supported runtime workflows:
+- onboarding/enrollment scaffold
+- `/lesson`
+- `/submit`
+- `/progress`
+- interactivity handling scaffold
+- `message.im` and `app_mention` events
+- scheduled daily lesson delivery
+- hourly reminders
+- weekly reporting
 
-`/enroll-student STU-100 MATH-101`
+See `architecture.md` for the full workflow map.
 
-The app will:
-- Create the student if needed.
-- Create or update enrollment for that student and course.
-- Save a log line so you can review what happened.
+## 6. Tech Stack
+- Google Apps Script (V8 runtime)
+- Google Sheets (runtime DB)
+- Slack App + Events API + Interactivity
+- Shared in-repo LMS library utilities (`SheetDb`, script props helper, audit/transactions)
 
-### 2) Accepts workflow webhook events
-If another system sends JSON data, this app can:
-- Update enrollment records (for enrollment events), or
-- Save automation records (for other workflow events).
+## 7. Configuration
+Set Script Properties in Apps Script:
+- Required:
+  - `SLACK_BOT_TOKEN`
+  - `SLACK_SIGNING_SECRET`
+  - `SPREADSHEET_ID`
+- Optional:
+  - `SLACK_VERIFICATION_TOKEN`
+  - `ADMIN_USER_IDS`
+  - `DEFAULT_COURSE_ID`
+  - `DEFAULT_TRACK`
+  - `OPS_ALERT_CHANNEL`
 
-### 3) Keeps audit history
-Every request (success or failure) writes to `audit_logs` so you can troubleshoot later.
+## 8. Deployment
+Use `deployment.md` for the full deployment process:
+1. Configure script properties.
+2. Deploy Apps Script Web App.
+3. Wire Slack manifest URLs to deployment URL.
+4. Run `setupTriggers()`.
+5. Execute smoke tests.
 
----
+## 9. Testing
+Use host test harness functions in `19_HostTestHarness.gs`:
+- `hostTest_fakeSlashLesson`
+- `hostTest_fakeSlashSubmit`
+- `hostTest_fakeSlashProgress`
+- `hostTest_fakeInteractive`
+- `hostTest_fakeAppMention`
+- `hostTest_fakeMessageIm`
+- `hostTest_reminderSmoke`
+- `hostTest_dailyDeliverySmoke`
 
-## Where data is stored
+Also run syntax checks before deployment.
 
-Data is stored in one Google Spreadsheet using these logical tables (tabs):
-- `students`
-- `enrollments`
-- `automations`
-- `audit_logs`
+## 10. Extending
+- Add new slash commands in `03_SlackService.gs` registry.
+- Extend event/interactivity branching in `SlackService`.
+- Implement final lesson sequencing and authored-content sync in `15_SheetsDataSync.gs`.
+- Add richer retry/dead-letter policies in `18_RetryResolver.gs`.
 
-The app uses a helper library in this repo called `sheet_db_lib` to treat spreadsheet tabs like database tables.
+## 11. Docs Index
+- `architecture.md` — architecture, workflow/data/tool maps.
+- `deployment.md` — deployment and smoke tests.
+- `runbook.md` — production operations and incident response.
+- `README.md` — this overview.
 
----
-
-## Security at a glance
-
-This app can require a shared secret passcode (`APP_PASSCODE`).
-- If passcode is set, incoming requests must include it.
-- If passcode is not set, passcode checking is skipped.
-
-For production, set a passcode.
-
----
-
-## Repo layout
-
-- `slack_host/` → Slack/webhook app logic and `doPost` entrypoint.
-- `sheet_db_lib/` → Spreadsheet database library (schemas, tables, transactions, helpers).
-- `pdf_mirror/` → PDF mirror of codebase docs.
-
----
-
-## Who should read what
-
-- **New owner / manager:** this README + `deployment.md`.
-- **Operations/support:** `runbook.md`.
-- **Developer:** source files under `slack_host/` and `sheet_db_lib/`.
-
----
-
-## Quick success checklist
-
-You are “done” when:
-- Google Apps Script web app is deployed.
-- Script Properties are filled in.
-- Slack slash command points to the web app URL.
-- A test `/enroll-student` command returns success.
-- You can see rows in `students`, `enrollments`, and `audit_logs`.
-
-See full steps in `deployment.md`.
+## 12. Status Notes
+- This repository currently provides scaffold-complete operational structure.
+- Some business-specific mapping and sequencing are placeholders marked with TODO.
+- For uncertain behavior, follow “Verify in code” notes in `architecture.md`.
