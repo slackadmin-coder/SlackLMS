@@ -4,7 +4,7 @@ var ConfigBootstrap = {
     return {
       slackBotToken: helper.getRequired('SLACK_BOT_TOKEN'),
       slackSigningSecret: helper.getRequired('SLACK_SIGNING_SECRET'),
-      spreadsheetId: helper.getRequired('SPREADSHEET_ID'),
+      spreadsheetId: helper.get('SHEET_DB_SPREADSHEET_ID', helper.getRequired('SPREADSHEET_ID')),
       slackVerificationToken: helper.get('SLACK_VERIFICATION_TOKEN', ''),
       adminUserIds: this._csv(helper.get('ADMIN_USER_IDS', '')),
       defaultCourseId: helper.get('DEFAULT_COURSE_ID', 'C001'),
