@@ -8,13 +8,27 @@ class LmsCompletionService {
   }
 
   handleSubmit(ctx) {
-    var lessonId = String((ctx.params && ctx.params.text) || '').trim();
-    if (!lessonId) return { response_type: 'ephemeral', text: 'Usage: /submit <lesson_id>' };
+    var parts = String((ctx.params && ctx.params.text) || '').trim().split(/\s+/);
+    var lessonId = parts[0] || '';
+    var keyword = (parts[1] || '').toLowerCase();
+
+    if (keyword !== 'complete') {
+      return { response_type: 'ephemeral', text: 'Usage: /submit <lesson_id> complete' };
+    }
+    if (!lessonId) {
+      return { response_type: 'ephemeral', text: 'Usage: /submit <lesson_id> complete' };
+    }
 
     var recorded = this.recordSubmission({ slackUserId: ctx.userId, lessonId: lessonId, payload: ctx.rawBody });
     if (!recorded.ok) return { response_type: 'ephemeral', text: recorded.message };
 
-    this.advanceLessonState({ learnerProgressId: recorded.learnerProgressId, toState: 'submitted' });
+    var progressRow = this._db.table('learner_progress').findAll().filter(function(r) {
+      return r.learnerId === recorded.learnerId && r.lessonId === lessonId && r.state !== 'completed';
+    })[0];
+    if (progressRow) {
+      this.advanceLessonState({ learnerProgressId: progressRow.id, toState: 'submitted' });
+    }
+
     this.queueNextLesson({ learnerId: recorded.learnerId, currentLessonId: lessonId });
     return { response_type: 'ephemeral', text: 'Submission received for ' + lessonId };
   }
@@ -50,13 +64,51 @@ class LmsCompletionService {
   }
 
   queueNextLesson(input) {
-    // TODO: determine next lesson ordering from course track.
-    var row = this._db.table('delivery_queue').insert({
+    var currentLesson = this._db.table('lessons').findById(input.currentLessonId);
+    if (!currentLesson) {
+      return { ok: false, code: 'CURRENT_LESSON_NOT_FOUND' };
+    }
+
+    var lessons = this._db.table('lessons').findAll().filter(function(row) {
+      return row.courseId === currentLesson.courseId && String(row.active) === 'true' && !String(row.deletedAt || '').trim();
+    }).sort(function(a, b) {
+      return Number(a.sequenceNumber || 0) - Number(b.sequenceNumber || 0);
+    });
+
+    var currentSequence = Number(currentLesson.sequenceNumber || 0);
+    var nextLesson = null;
+    for (var i = 0; i < lessons.length; i++) {
+      if (Number(lessons[i].sequenceNumber || 0) > currentSequence) {
+        nextLesson = lessons[i];
+        break;
+      }
+    }
+
+    if (!nextLesson) {
+      return { ok: true, code: 'COURSE_COMPLETE', message: 'No further lessons in this course.' };
+    }
+
+    var existingProgress = this._db.table('learner_progress').findAll().filter(function(row) {
+      return row.learnerId === input.learnerId && row.lessonId === nextLesson.id;
+    })[0];
+    if (existingProgress && existingProgress.state !== 'completed') {
+      return { ok: true, code: 'ALREADY_QUEUED' };
+    }
+
+    this._db.table('learner_progress').insert({
       learnerId: input.learnerId,
-      lessonId: '',
+      lessonId: nextLesson.id,
+      state: 'queued',
+      dueAt: ''
+    });
+
+    this._db.table('delivery_queue').insert({
+      learnerId: input.learnerId,
+      lessonId: nextLesson.id,
       status: 'queued',
       runAt: new Date().toISOString()
     });
-    return { ok: true, code: 'NEXT_QUEUED', queueId: row.id };
+
+    return { ok: true, code: 'NEXT_LESSON_QUEUED', lessonId: nextLesson.id };
   }
 }

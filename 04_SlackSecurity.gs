@@ -15,16 +15,7 @@ var SlackSecurity = {
       return this._verifySignature(secret, signature, ts, parsed.rawBody);
     }
 
-    var token = String((config && config.slackVerificationToken) || '');
-    if (token) {
-      var presented = String((parsed.params && parsed.params.token) || (parsed.body && parsed.body.token) || '');
-      if (this._constantTimeEquals(token, presented)) {
-        return { ok: true, code: 'OK_FALLBACK_TOKEN', message: 'Fallback token verification passed.' };
-      }
-      return { ok: false, code: 'FALLBACK_TOKEN_MISMATCH', message: 'Fallback token verification failed.' };
-    }
-
-    return { ok: false, code: 'UNVERIFIED', message: 'Slack signature headers unavailable and fallback not configured.' };
+    return { ok: false, code: 'UNVERIFIED', message: 'Slack signature headers unavailable and signing credentials are missing or incomplete.' };
   },
 
   _verifySignature: function(secret, signature, ts, rawBody) {

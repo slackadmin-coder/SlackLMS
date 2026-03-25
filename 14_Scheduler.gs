@@ -3,6 +3,8 @@ function setupTriggers() {
   ScriptApp.newTrigger('runDailyLessonDelivery').timeBased().everyDays(1).atHour(8).create();
   ScriptApp.newTrigger('runHourlyReminderCheck').timeBased().everyHours(1).create();
   ScriptApp.newTrigger('runWeeklyAdminReport').timeBased().onWeekDay(ScriptApp.WeekDay.MONDAY).atHour(9).create();
+  ScriptApp.newTrigger('runHealthCheck').timeBased().everyMinutes(30).create();
+  ScriptApp.newTrigger('runDailyBackup').timeBased().everyDays(1).atHour(2).create();
   return { ok: true, code: 'TRIGGERS_CREATED' };
 }
 
@@ -45,5 +47,21 @@ function runWeeklyAdminReport() {
 }
 
 function runHealthCheck() {
-  return createHostDependencies(ConfigBootstrap.load()).healthMonitor.getSnapshot();
+  var lock = LockService.getScriptLock();
+  lock.waitLock(30000);
+  try {
+    return createHostDependencies(ConfigBootstrap.load()).healthMonitor.getSnapshot();
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+function runDailyBackup() {
+  var lock = LockService.getScriptLock();
+  lock.waitLock(30000);
+  try {
+    return createHostDependencies(ConfigBootstrap.load()).backupService.runDailyBackup();
+  } finally {
+    lock.releaseLock();
+  }
 }
