@@ -16,7 +16,7 @@ class LmsEnrollmentService {
     var queued = this.queueFirstLesson({ learnerId: learner.id, courseId: enrollment.courseId });
     this.sendWelcomeDm({ slackUserId: learner.slackUserId, learnerId: learner.id, courseId: enrollment.courseId });
     this._db.audit('enroll_learner', 'enrollment', { learnerId: learner.id, enrollmentId: enrollment.id });
-    return { ok: true, code: 'ENROLLED', learnerId: learner.id, enrollmentId: enrollment.id, queueId: queued.id };
+    return { ok: true, code: 'ENROLLED', learnerId: learner.id, enrollmentId: enrollment.id, queueId: queued.queueId || '' };
   }
 
   findLearnerBySlackUserId(slackUserId) {
@@ -55,12 +55,47 @@ class LmsEnrollmentService {
   }
 
   queueFirstLesson(input) {
-    // TODO: resolve first lesson id from runtime lesson sequencing rules.
-    return this._db.table('delivery_queue').insert({
-      learnerId: input.learnerId,
-      lessonId: '',
-      status: 'queued',
-      runAt: new Date().toISOString()
+    var lessons = this._db.table('lessons').findAll().filter(function(row) {
+      return row.courseId === input.courseId && String(row.active) === 'true' && !String(row.deletedAt || '').trim();
+    }).sort(function(a, b) {
+      return Number(a.sequenceNumber || 0) - Number(b.sequenceNumber || 0);
     });
+
+    var firstLesson = lessons[0];
+    if (!firstLesson) {
+      return { ok: false, code: 'NO_LESSONS_AVAILABLE', message: 'No active lessons found for course.' };
+    }
+
+    var existingProgress = this._db.table('learner_progress').findAll().filter(function(row) {
+      return row.learnerId === input.learnerId && row.lessonId === firstLesson.id;
+    })[0];
+
+    if (existingProgress && existingProgress.state !== 'completed') {
+      return {
+        ok: true,
+        code: 'FIRST_LESSON_QUEUED',
+        learnerId: input.learnerId,
+        lessonId: firstLesson.id,
+        queueId: '',
+        progressId: existingProgress.id
+      };
+    }
+
+    var nowIso = new Date().toISOString();
+    this._db.table('learner_progress').insert({
+      learnerId: input.learnerId,
+      lessonId: firstLesson.id,
+      state: 'queued',
+      dueAt: nowIso
+    });
+
+    var queueRow = this._db.table('delivery_queue').insert({
+      learnerId: input.learnerId,
+      lessonId: firstLesson.id,
+      status: 'queued',
+      runAt: nowIso
+    });
+
+    return { ok: true, code: 'FIRST_LESSON_QUEUED', learnerId: input.learnerId, lessonId: firstLesson.id, queueId: queueRow.id };
   }
 }

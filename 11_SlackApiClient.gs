@@ -5,13 +5,32 @@ class SlackApiClient {
     this._token = String(this._config.slackBotToken || '');
   }
 
-  postMessage(channel, text, blocks) { return this._call('chat.postMessage', { channel: channel, text: text, blocks: blocks || [] }); }
-  postEphemeral(channel, user, text, blocks) { return this._call('chat.postEphemeral', { channel: channel, user: user, text: text, blocks: blocks || [] }); }
+  postMessage(channel, text, blocks) {
+    if (this._isQuietHours()) {
+      return { ok: false, code: 'QUIET_HOURS', message: 'Message suppressed during quiet hours.', retryable: false };
+    }
+    return this._call('chat.postMessage', { channel: channel, text: text, blocks: blocks || [] });
+  }
+
+  postEphemeral(channel, user, text, blocks) {
+    return this._call('chat.postEphemeral', { channel: channel, user: user, text: text, blocks: blocks || [] });
+  }
+
   openView(triggerId, view) { return this._call('views.open', { trigger_id: triggerId, view: view }); }
   updateMessage(channel, ts, text, blocks) { return this._call('chat.update', { channel: channel, ts: ts, text: text, blocks: blocks || [] }); }
+
   openDm(userId) {
     var res = this._call('conversations.open', { users: userId });
     return { ok: !!res.ok, code: res.code, message: res.message, channelId: res.data && res.data.channel ? res.data.channel.id : '' };
+  }
+
+  _isQuietHours() {
+    var start = Number(this._config.quietHoursStart || 21);
+    var end = Number(this._config.quietHoursEnd || 7);
+    var hour = new Date().getUTCHours() + 12;
+    hour = hour % 24;
+    if (start > end) return hour >= start || hour < end;
+    return hour >= start && hour < end;
   }
 
   _call(method, payload) {

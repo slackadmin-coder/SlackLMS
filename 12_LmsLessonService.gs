@@ -27,6 +27,13 @@ class LmsLessonService {
     if (!progress) return { ok: false, code: 'NO_ACTIVE_LESSON', message: 'No lesson assigned yet.' };
 
     var lesson = this._db.table('lessons').findById(progress.lessonId) || { id: progress.lessonId, title: 'Lesson', track: '' };
+    var qaRecord = this._db.table('lesson_qa_records').findAll().filter(function(r) {
+      return r.lessonId === progress.lessonId;
+    })[0];
+    var qaThreshold = Number((this._config.qaPassThreshold) || 70);
+    if (qaRecord && Number(qaRecord.qaScore || 0) < qaThreshold) {
+      return { ok: false, code: 'LESSON_NOT_QA_APPROVED', message: 'This lesson has not passed QA review.' };
+    }
     return { ok: true, learnerId: learner.id, lesson: lesson, progress: progress };
   }
 

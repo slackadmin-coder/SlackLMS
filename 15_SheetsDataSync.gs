@@ -16,6 +16,8 @@ function upsertLessonRuntimeRecord(row) {
   var inserted = table.insert({
     id: row.id || undefined,
     courseId: row.courseId || '',
+    moduleId: row.moduleId || '',
+    sequenceNumber: String(row.sequenceNumber == null ? '0' : row.sequenceNumber),
     track: row.track || '',
     title: row.title || '',
     contentRef: row.contentRef || '',
