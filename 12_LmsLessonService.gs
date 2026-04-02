@@ -12,19 +12,42 @@ class LmsLessonService {
   handleLesson(ctx) {
     var current = this.getCurrentLessonForLearner(ctx.userId);
     if (!current.ok) return { response_type: 'ephemeral', text: current.message };
-    var slackPayload = this._parseSlackPayload(current.lesson);
-    if (slackPayload) {
-      return {
-        response_type: 'ephemeral',
-        text: slackPayload.text || 'Your current lesson',
-        blocks: slackPayload.blocks || []
-      };
+
+    var payload = this._buildLessonMessagePayload(current.lesson, 'Your current lesson');
+    var dm = this._slack.openDm(ctx.userId);
+    if (!dm.ok) {
+      this._db.audit('learn_dm_failed', 'audit_log', {
+        learnerId: current.learnerId,
+        lessonId: current.lesson.id,
+        slackUserId: ctx.userId,
+        code: dm.code,
+        message: dm.message,
+        retryable: !!dm.retryable
+      });
+      return { response_type: 'ephemeral', text: 'I could not open a DM right now. Please try again in a moment.' };
     }
-    return {
-      response_type: 'ephemeral',
-      text: 'Your current lesson',
-      blocks: this._blocks.buildLessonCard(current.lesson)
-    };
+
+    var sent = this._slack.postMessage(dm.channelId, payload.text, payload.blocks);
+    if (!sent.ok) {
+      this._db.audit('learn_dm_failed', 'audit_log', {
+        learnerId: current.learnerId,
+        lessonId: current.lesson.id,
+        slackUserId: ctx.userId,
+        channelId: dm.channelId,
+        code: sent.code,
+        message: sent.message,
+        retryable: !!sent.retryable
+      });
+      return { response_type: 'ephemeral', text: 'I could not send your lesson DM. Please try again shortly.' };
+    }
+
+    this._db.audit('learn_dm_sent', 'audit_log', {
+      learnerId: current.learnerId,
+      lessonId: current.lesson.id,
+      slackUserId: ctx.userId,
+      channelId: dm.channelId
+    });
+    return { response_type: 'ephemeral', text: 'Sent your current lesson in DM :email:' };
   }
 
   handleMix(ctx) {
@@ -58,11 +81,11 @@ class LmsLessonService {
         ctx.data.lesson = self._repos.lessonRepo.findById(ctx.trigger.lessonId) || { id: ctx.trigger.lessonId, title: 'Lesson' };
       },
       process: function(ctx) {
-        var slackPayload = self._parseSlackPayload(ctx.data.lesson);
-        ctx.data.text = slackPayload ? (slackPayload.text || 'New lesson available') : 'New lesson available';
-        ctx.data.blocks = slackPayload ? (slackPayload.blocks || []) : self._blocks.buildLessonCard(ctx.data.lesson);
+        var payload = self._buildLessonMessagePayload(ctx.data.lesson, 'New lesson available');
+        ctx.data.text = payload.text;
+        ctx.data.blocks = payload.blocks;
         ctx.data.dm = self._slack.openDm(ctx.data.learner.slackUserId);
-        if (!ctx.data.dm.ok) throw { code: ctx.data.dm.code, message: ctx.data.dm.message, retryable: true };
+        if (!ctx.data.dm.ok) throw { code: ctx.data.dm.code, message: ctx.data.dm.message, retryable: !!ctx.data.dm.retryable };
         ctx.data.sent = self._slack.postMessage(ctx.data.dm.channelId, ctx.data.text, ctx.data.blocks);
         if (!ctx.data.sent.ok) throw { code: ctx.data.sent.code, message: ctx.data.sent.message, retryable: !!ctx.data.sent.retryable };
       },
@@ -94,6 +117,20 @@ class LmsLessonService {
     } catch (err) {
       return null;
     }
+  }
+
+  _buildLessonMessagePayload(lesson, defaultText) {
+    var slackPayload = this._parseSlackPayload(lesson);
+    if (slackPayload) {
+      return {
+        text: slackPayload.text || defaultText,
+        blocks: slackPayload.blocks || []
+      };
+    }
+    return {
+      text: defaultText,
+      blocks: this._blocks.buildLessonCard(lesson)
+    };
   }
 
   deliverPendingLessons() {

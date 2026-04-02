@@ -21,7 +21,15 @@ class SlackApiClient {
 
   openDm(userId) {
     var res = this._call('conversations.open', { users: userId });
-    return { ok: !!res.ok, code: res.code, message: res.message, channelId: res.data && res.data.channel ? res.data.channel.id : '' };
+    return {
+      ok: !!res.ok,
+      code: res.code,
+      message: res.message,
+      retryable: !!res.retryable,
+      method: res.method || 'conversations.open',
+      status: res.status,
+      channelId: res.data && res.data.channel ? res.data.channel.id : ''
+    };
   }
 
   _isQuietHours() {
