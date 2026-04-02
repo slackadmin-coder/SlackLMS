@@ -119,7 +119,7 @@ Use `runHealthCheck()` / `HealthMonitor.getSnapshot()` for consolidated status.
 1. Apply minimal scoped change in branch.
 2. Run syntax checks and host harness smoke tests.
 3. Deploy new web app version.
-4. Validate `/lesson`, `/submit`, `/progress`, app mention, and interactivity.
+4. Validate `/learn`, `/submit`, `/progress`, app mention, and interactivity.
 5. Monitor logs/queues for 30-60 minutes.
 6. Roll back to prior Apps Script deployment if error rate increases.
 

@@ -11,7 +11,7 @@
     },
     "slash_commands": [
       {
-        "command": "/lesson",
+        "command": "/learn",
         "url": "https://script.google.com/macros/s/AKfycbxACBb8JvIStCL87-OLdKgxM2axtxRtCfzCW9XAT6m-j6oF7M-mFMBASjTDhG7N6P2r/exec",
         "description": "Get your current lesson",
         "should_escape": false
@@ -26,6 +26,18 @@
         "command": "/progress",
         "url": "https://script.google.com/macros/s/AKfycbxACBb8JvIStCL87-OLdKgxM2axtxRtCfzCW9XAT6m-j6oF7M-mFMBASjTDhG7N6P2r/exec",
         "description": "Check your progress",
+        "should_escape": false
+      },
+      {
+        "command": "/report",
+        "url": "https://script.google.com/macros/s/AKfycbxACBb8JvIStCL87-OLdKgxM2axtxRtCfzCW9XAT6m-j6oF7M-mFMBASjTDhG7N6P2r/exec",
+        "description": "Admin report dashboard",
+        "should_escape": false
+      },
+      {
+        "command": "/onboard",
+        "url": "https://script.google.com/macros/s/AKfycbxACBb8JvIStCL87-OLdKgxM2axtxRtCfzCW9XAT6m-j6oF7M-mFMBASjTDhG7N6P2r/exec",
+        "description": "Trigger onboarding pipeline",
         "should_escape": false
       }
     ]

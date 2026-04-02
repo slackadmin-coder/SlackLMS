@@ -4,7 +4,7 @@
 This guide describes how to deploy the Slack LMS Apps Script integration using the current single-endpoint Slack manifest and Google Sheets runtime database.
 
 ## 2. Deployment Architecture
-- Slack routes `/lesson`, `/submit`, `/progress`, interactivity, `message.im`, and `app_mention` to one Apps Script Web App URL.
+- Slack routes `/learn`, `/submit`, `/progress`, interactivity, `message.im`, and `app_mention` to one Apps Script Web App URL.
 - Apps Script host (`code.gs#doPost`) orchestrates parser -> security -> router -> services.
 - Runtime persistence is Google Sheets through shared `SheetDb` (`LMSLibrary`) helpers.
 - Triggered jobs run lesson delivery, reminders, and reporting.
@@ -53,9 +53,11 @@ Set these Script Properties in Apps Script project settings.
 ## 7. Slack App Setup
 Use existing `manifest.json` values:
 - Slash commands:
-  - `/lesson`
+  - `/learn`
   - `/submit`
   - `/progress`
+  - `/report`
+  - `/onboard`
 - Events:
   - `message.im`
   - `app_mention`
@@ -85,9 +87,11 @@ After first deploy:
 Execute in order:
 1. **Health check**: run `runHealthCheck()` manually.
 2. **Slash commands**:
-   - `/lesson`
+   - `/learn`
    - `/submit <lesson_id>`
    - `/progress`
+  - `/report`
+  - `/onboard`
 3. **Interactivity**: submit a test interactive payload (or `hostTest_fakeInteractive`).
 4. **Events**:
    - `hostTest_fakeAppMention`

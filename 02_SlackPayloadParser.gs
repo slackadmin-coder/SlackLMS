@@ -21,7 +21,7 @@ var SlackPayloadParser = {
     else if (params.command) routeType = 'slash_command';
     else if (interaction) routeType = 'interactivity';
     else if (body.type === 'event_callback') routeType = 'event_callback';
-    else if (body.workflow_step || params.workflow) routeType = 'workflow_webhook';
+    else if (body.workflow || body.workflow_step || params.workflow) routeType = 'workflow_webhook';
 
     var source = interaction || body || params;
     return {

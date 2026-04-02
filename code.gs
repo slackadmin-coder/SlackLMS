@@ -11,6 +11,7 @@ function doGet() {
 }
 
 function doPost(e) {
+  var correlationId = 'req_' + new Date().getTime() + '_' + Math.random().toString(36).slice(2, 8);
   try {
     var config = getHostConfig_();
     var deps = getHostDependencies_(config);
@@ -19,31 +20,34 @@ function doPost(e) {
 
     if (!verified.ok) {
       deps.audit('request_denied', {
-        code: verified.code,
+        correlationId: correlationId,
+        code: verified.code || verified.error_code,
         routeType: parsed.routeType
       });
-      return jsonResponse_({ ok: false, error: verified.code, message: verified.message });
+      return jsonResponse_(verified);
     }
 
     var routed = SlackRouter.route(parsed, deps);
     deps.audit('request_routed', {
+      correlationId: correlationId,
       routeType: parsed.routeType,
       ok: !!routed.ok,
       code: routed.code || ''
     });
 
-    return jsonResponse_(routed.response || { ok: false, error: 'missing_response' });
+    return jsonResponse_(routed.response || ErrorService.create('MISSING_RESPONSE', 'missing_response', false, correlationId));
   } catch (err) {
     try {
       logAuditExact_({
         actor: CONFIG.ACTOR_SYSTEM,
         action: 'doPost_error',
         status: 'error',
+        correlationId: correlationId,
         message: safeError_(err)
       });
     } catch (logErr) {}
 
-    return jsonResponse_({ ok: false, error: 'host_error', message: 'Something went wrong in the Slack handler.' });
+    return jsonResponse_(ErrorService.create('HOST_ERROR', 'Something went wrong in the Slack handler.', true, correlationId));
   }
 }
 

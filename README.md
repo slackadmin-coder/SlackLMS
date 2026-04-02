@@ -6,9 +6,11 @@ This repository implements a Slack LMS automation host on Google Apps Script and
 ## 2. Features
 - Single-ingress Slack webhook host (`doPost(e)`).
 - Slash command routing for:
-  - `/lesson`
+  - `/learn`
   - `/submit`
   - `/progress`
+  - `/report`
+  - `/onboard`
 - Event callback routing for:
   - `message.im`
   - `app_mention`
@@ -39,7 +41,7 @@ Key principle: keep ingress thin and move behavior into modular services.
 ## 5. Workflows
 Supported runtime workflows:
 - onboarding/enrollment scaffold
-- `/lesson`
+- `/learn`
 - `/submit`
 - `/progress`
 - interactivity handling scaffold
@@ -79,7 +81,7 @@ Use `deployment.md` for the full deployment process:
 
 ## 9. Testing
 Use host test harness functions in `19_HostTestHarness.gs`:
-- `hostTest_fakeSlashLesson`
+- `hostTest_fakeSlashLearn`
 - `hostTest_fakeSlashSubmit`
 - `hostTest_fakeSlashProgress`
 - `hostTest_fakeInteractive`
@@ -104,5 +106,5 @@ Also run syntax checks before deployment.
 
 ## 12. Status Notes
 - This repository currently provides scaffold-complete operational structure.
-- Some business-specific mapping and sequencing are placeholders marked with TODO.
+- Some business-specific mapping and sequencing are placeholders marked with next-phase.
 - For uncertain behavior, follow “Verify in code” notes in `architecture.md`.

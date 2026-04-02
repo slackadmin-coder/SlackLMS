@@ -1,9 +1,11 @@
 class LmsProgressService {
-  constructor(db, slackApiClient, blocks, config) {
+  constructor(db, slackApiClient, blocks, config, repositories, workflowEngine) {
     this._db = db;
     this._slack = slackApiClient;
     this._blocks = blocks;
     this._config = config || {};
+    this._repos = repositories || {};
+    this._workflow = workflowEngine;
   }
 
   handleProgress(ctx) {
@@ -17,10 +19,10 @@ class LmsProgressService {
   }
 
   getProgressSnapshot(slackUserId) {
-    var learner = this._db.table('learners').findAll().filter(function(row) { return row.slackUserId === slackUserId; })[0];
+    var learner = this._repos.learnerRepo.findBySlackUserId(slackUserId);
     if (!learner) return { ok: false, code: 'LEARNER_NOT_FOUND', message: 'Learner not found.' };
 
-    var progress = this._db.table('learner_progress').findAll().filter(function(row) { return row.learnerId === learner.id; });
+    var progress = this._repos.progressRepo.findByLearnerId(learner.id);
     var completed = progress.filter(function(r) { return r.state === 'completed'; }).length;
     var overdue = progress.filter(function(r) { return r.state === 'overdue'; }).length;
     var active = progress.filter(function(r) { return r.state !== 'completed'; })[0] || null;
