@@ -69,7 +69,10 @@ class LmsLessonService {
       persist: function(ctx) {
         self._db.table('delivery_queue').insert({ learnerId: learnerId, lessonId: lessonId, status: 'delivered', runAt: new Date().toISOString(), attempts: '0', priority: 'normal' });
         var active = self._repos.progressRepo.findByLearnerAndLesson(learnerId, lessonId);
-        if (active) self._repos.progressRepo.update(active.id, { state: 'delivered' });
+        if (active) {
+          var transitioned = self._state.transition(active, self._state.states.IN_PROGRESS, { source: 'delivery' });
+          if (transitioned.ok) self._repos.progressRepo.update(active.id, { state: transitioned.record.state });
+        }
       },
       respond: function(ctx) {
         ctx.result = { ok: true, code: 'DELIVERED', learnerId: learnerId, lessonId: lessonId, correlationId: ctx.correlationId };

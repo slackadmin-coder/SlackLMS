@@ -7,12 +7,14 @@ class LmsReminderService {
   }
 
   sendOverdueReminders() {
-    var overdue = this._db.table('learner_progress').findAll().filter(function(row) { return row.state === 'overdue'; });
+    var needsReminder = this._db.table('learner_progress').findAll().filter(function(row) {
+      return row.state === 'in_progress' || row.state === 'submitted';
+    });
     var results = [];
-    for (var i = 0; i < overdue.length; i++) {
-      results.push(this.sendReminderForLearner(overdue[i].learnerId));
+    for (var i = 0; i < needsReminder.length; i++) {
+      results.push(this.sendReminderForLearner(needsReminder[i].learnerId));
     }
-    return { ok: true, total: overdue.length, results: results };
+    return { ok: true, total: needsReminder.length, results: results };
   }
 
   sendReminderForLearner(learnerId) {

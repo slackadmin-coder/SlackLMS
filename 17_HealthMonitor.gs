@@ -30,8 +30,8 @@ class HealthMonitor {
   }
 
   getOverdueMetrics() {
-    var overdue = this._db.table('learner_progress').findAll().filter(function(r) { return r.state === 'overdue'; });
-    return { ok: true, overdueCount: overdue.length };
+    var inProgress = this._db.table('learner_progress').findAll().filter(function(r) { return r.state === 'in_progress' || r.state === 'submitted'; });
+    return { ok: true, overdueCount: inProgress.length };
   }
 
   getSnapshot() {

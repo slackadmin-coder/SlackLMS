@@ -45,8 +45,8 @@ class LmsCompletionService {
       },
       persist: function(ctx) {
         var progressRow = self._repos.progressRepo.findByLearnerAndLesson(ctx.data.learner.id, ctx.trigger.lessonId);
-        if (progressRow && progressRow.state !== 'completed') {
-          self.advanceLessonState({ learnerProgressId: progressRow.id, toState: 'submitted' });
+        if (progressRow && self._state.normalizeState(progressRow.state) !== self._state.states.COMPLETED) {
+          self.advanceLessonState({ learnerProgressId: progressRow.id, toState: self._state.states.SUBMITTED });
         }
         self.queueNextLesson({ learnerId: ctx.data.learner.id, currentLessonId: ctx.trigger.lessonId });
       },
@@ -88,14 +88,14 @@ class LmsCompletionService {
     }
 
     var existingProgress = this._repos.progressRepo.findByLearnerAndLesson(input.learnerId, nextLesson.id);
-    if (existingProgress && existingProgress.state !== 'completed') {
+    if (existingProgress && this._state.normalizeState(existingProgress.state) !== this._state.states.COMPLETED) {
       return { ok: true, code: 'ALREADY_QUEUED' };
     }
 
     this._repos.progressRepo.insert({
       learnerId: input.learnerId,
       lessonId: nextLesson.id,
-      state: 'queued',
+      state: this._state.states.NOT_STARTED,
       dueAt: ''
     });
 
