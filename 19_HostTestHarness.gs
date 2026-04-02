@@ -38,6 +38,26 @@ function hostTest_onboardAdmin() {
   return doPost(_fakeSignedSlash('/onboard', 'test@rwrgroup.com')).getContent();
 }
 
+function hostTest_fakeSlashGaps() {
+  return doPost(_fakeSignedSlash('/gaps', '')).getContent();
+}
+
+function hostTest_fakeSlashAudit() {
+  return doPost(_fakeSignedSlash('/audit', '')).getContent();
+}
+
+function hostTest_fakeSlashMix() {
+  return doPost(_fakeSignedSlash('/mix', '')).getContent();
+}
+
+function hostTest_fakeSlashReinforce() {
+  return doPost(_fakeSignedSlash('/reinforce', '')).getContent();
+}
+
+function hostTest_fakeSlashOffboard() {
+  return doPost(_fakeSignedSlash('/offboard', 'departing.user@rwrgroup.com')).getContent();
+}
+
 function hostTest_fakeInteractive() {
   var payload = {
     type: 'block_actions',

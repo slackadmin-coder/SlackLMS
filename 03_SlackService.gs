@@ -20,7 +20,12 @@ class SlackService {
       '/help': this._handleHelp.bind(this),
       '/enroll': this._handleEnroll.bind(this),
       '/report': this._handleReport.bind(this),
-      '/onboard': this._handleOnboard.bind(this)
+      '/onboard': this._handleOnboard.bind(this),
+      '/gaps': this._handleGaps.bind(this),
+      '/audit': this._handleAudit.bind(this),
+      '/mix': this._handleMix.bind(this),
+      '/reinforce': this._handleReinforce.bind(this),
+      '/offboard': this._handleOffboard.bind(this)
     };
   }
 
@@ -69,7 +74,7 @@ class SlackService {
     if (event.type === 'app_mention') {
       return {
         ok: true,
-        text: 'Hi! Try `/learn`, `/submit <lesson_id> complete`, `/progress`, `/report`, `/onboard email@company.com`, or `/help`.'
+        text: 'Hi! Commands: `/learn`, `/submit <lesson_id> complete`, `/progress`, `/help`, `/enroll [courseId]`, `/report`, `/onboard [email]`, `/gaps`, `/audit`, `/mix`, `/reinforce`, `/offboard [email]`.'
       };
     }
     if (event.type === 'message' && event.channel_type === 'im') {
@@ -98,7 +103,7 @@ class SlackService {
   }
 
   _handleHelp() {
-    return { response_type: 'ephemeral', text: 'Commands: /learn, /submit <lesson_id> complete, /progress, /report, /onboard [email], /enroll [courseId]' };
+    return { response_type: 'ephemeral', text: 'Commands: /learn, /submit <lesson_id> complete, /progress, /help, /enroll [courseId], /report, /onboard [email], /gaps, /audit, /mix, /reinforce, /offboard [email]' };
   }
 
   _handleEnroll(parsed) {
@@ -135,6 +140,26 @@ class SlackService {
     }
     var dashboard = this._report.buildAdminDashboard(parsed && parsed.userId);
     return { response_type: 'ephemeral', text: 'Admin report', blocks: this._blocks.buildAdminSummary(dashboard) };
+  }
+
+  _handleGaps(parsed) {
+    return this._report.handleGaps(parsed);
+  }
+
+  _handleAudit(parsed) {
+    return this._report.handleAudit(parsed);
+  }
+
+  _handleMix(parsed) {
+    return this._lesson.handleMix(parsed);
+  }
+
+  _handleReinforce(parsed) {
+    return this._progress.handleReinforce(parsed);
+  }
+
+  _handleOffboard(parsed) {
+    return this._onboarding.handleOffboard(parsed);
   }
 
   _handleDm(event) {

@@ -17,6 +17,29 @@ class ReportService {
     };
   }
 
+  handleGaps() {
+    var overdue = this.buildOverdueSummary();
+    return {
+      response_type: 'ephemeral',
+      text: 'Learning gaps summary',
+      blocks: [
+        { type: 'section', text: { type: 'mrkdwn', text: '*Open gaps:* ' + String(overdue.overdueCount || 0) } }
+      ]
+    };
+  }
+
+  handleAudit() {
+    var dashboard = this.buildAdminDashboard();
+    return {
+      response_type: 'ephemeral',
+      text: 'Audit summary',
+      blocks: [
+        { type: 'section', text: { type: 'mrkdwn', text: '*Generated:* ' + String(dashboard.generatedAt || '') } },
+        { type: 'section', text: { type: 'mrkdwn', text: '*Learners:* ' + String(dashboard.totals.learners || 0) + ' | *Completions:* ' + String(dashboard.totals.completed || 0) + ' | *Overdue:* ' + String(dashboard.totals.overdue || 0) } }
+      ]
+    };
+  }
+
   buildLearnerProgressSummary(slackUserId) {
     var learnerRepo = this._repos.learnerRepo;
     var progressRepo = this._repos.progressRepo;
