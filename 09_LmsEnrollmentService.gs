@@ -1,8 +1,9 @@
 class LmsEnrollmentService {
-  constructor(db, slackApiClient, blocks, config, repositories, workflowEngine, securityService) {
+  constructor(db, slackApiClient, blocks, stateMachine, config, repositories, workflowEngine, securityService) {
     this._db = db;
     this._slack = slackApiClient;
     this._blocks = blocks;
+    this._state = stateMachine;
     this._config = config || {};
     this._repos = repositories || {};
     this._workflow = workflowEngine;
@@ -100,7 +101,7 @@ class LmsEnrollmentService {
 
     var existingProgress = this._repos.progressRepo.findByLearnerAndLesson(input.learnerId, firstLesson.id);
 
-    if (existingProgress && existingProgress.state !== 'completed') {
+    if (existingProgress && this._state.normalizeState(existingProgress.state) !== this._state.states.COMPLETED) {
       return {
         ok: true,
         code: 'FIRST_LESSON_QUEUED',
@@ -115,7 +116,7 @@ class LmsEnrollmentService {
     this._repos.progressRepo.insert({
       learnerId: input.learnerId,
       lessonId: firstLesson.id,
-      state: 'queued',
+      state: this._state.states.NOT_STARTED,
       dueAt: nowIso
     });
 

@@ -70,7 +70,7 @@ function createHostDependencies(config) {
     blockKitBuilder: blocks,
     stateMachine: stateMachine,
     repositories: repositories,
-    enrollmentService: new LmsEnrollmentService(db, slackApi, blocks, cfg, repositories, workflow, SecurityService),
+    enrollmentService: new LmsEnrollmentService(db, slackApi, blocks, stateMachine, cfg, repositories, workflow, SecurityService),
     lessonService: new LmsLessonService(db, slackApi, blocks, stateMachine, cfg, repositories, workflow),
     progressService: new LmsProgressService(db, slackApi, blocks, cfg, repositories, workflow),
     completionService: new LmsCompletionService(db, slackApi, blocks, stateMachine, cfg, repositories, workflow, SecurityService),
@@ -104,4 +104,10 @@ function createHostDependencies(config) {
   }, deps.blockKitBuilder, deps.config, SecurityService, configRepo);
 
   return deps;
+}
+
+
+function migrateLearnerProgressStates() {
+  var deps = createHostDependencies();
+  return deps.stateMachine.migrateLegacyStatesInDb(deps.db);
 }

@@ -13,7 +13,7 @@ class ReportService {
       completed: dashboard.totals.completed,
       submitted: dashboard.totals.submitted,
       completionRate: dashboard.totals.completionRate,
-      overdue: dashboard.totals.overdue
+      overdue: dashboard.totals.inProgress
     };
   }
 
@@ -23,7 +23,7 @@ class ReportService {
       response_type: 'ephemeral',
       text: 'Learning gaps summary',
       blocks: [
-        { type: 'section', text: { type: 'mrkdwn', text: '*Open gaps:* ' + String(overdue.overdueCount || 0) } }
+        { type: 'section', text: { type: 'mrkdwn', text: '*Open gaps:* ' + String(overdue.inProgressCount || 0) } }
       ]
     };
   }
@@ -35,7 +35,7 @@ class ReportService {
       text: 'Audit summary',
       blocks: [
         { type: 'section', text: { type: 'mrkdwn', text: '*Generated:* ' + String(dashboard.generatedAt || '') } },
-        { type: 'section', text: { type: 'mrkdwn', text: '*Learners:* ' + String(dashboard.totals.learners || 0) + ' | *Completions:* ' + String(dashboard.totals.completed || 0) + ' | *Overdue:* ' + String(dashboard.totals.overdue || 0) } }
+        { type: 'section', text: { type: 'mrkdwn', text: '*Learners:* ' + String(dashboard.totals.learners || 0) + ' | *Completions:* ' + String(dashboard.totals.completed || 0) + ' | *Overdue:* ' + String(dashboard.totals.inProgress || 0) } }
       ]
     };
   }
@@ -51,14 +51,14 @@ class ReportService {
       ok: true,
       learnerId: learner.id,
       completed: rows.filter(function(r) { return r.state === 'completed'; }).length,
-      overdue: rows.filter(function(r) { return r.state === 'overdue'; }).length,
+      overdue: rows.filter(function(r) { return r.state === 'in_progress' || r.state === 'submitted'; }).length,
       active: rows.filter(function(r) { return r.state !== 'completed'; }).map(function(r) { return r.lessonId; })
     };
   }
 
   buildOverdueSummary() {
-    var rows = this._db.table('learner_progress').findAll().filter(function(r) { return r.state === 'overdue'; });
-    return { ok: true, overdueCount: rows.length, items: rows };
+    var rows = this._db.table('learner_progress').findAll().filter(function(r) { return r.state === 'in_progress' || r.state === 'submitted'; });
+    return { ok: true, inProgressCount: rows.length, items: rows };
   }
 
   buildAdminDashboard() {
@@ -68,7 +68,7 @@ class ReportService {
 
     var completed = progress.filter(function(r) { return r.state === 'completed'; }).length;
     var submitted = progress.filter(function(r) { return r.state === 'submitted'; }).length;
-    var overdueItems = progress.filter(function(r) { return r.state === 'overdue'; });
+    var inProgressItems = progress.filter(function(r) { return r.state === 'in_progress' || r.state === 'submitted'; });
     var completionRate = progress.length ? Number((completed / progress.length * 100).toFixed(2)) : 0;
 
     return {
@@ -79,10 +79,10 @@ class ReportService {
         enrollments: enrollment.length,
         completed: completed,
         submitted: submitted,
-        overdue: overdueItems.length,
+        inProgress: inProgressItems.length,
         completionRate: completionRate
       },
-      overdueLessons: overdueItems,
+      inProgressLessons: inProgressItems,
       jsonReady: true
     };
   }

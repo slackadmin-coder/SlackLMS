@@ -31,7 +31,7 @@ class LmsProgressService {
 
     var progress = this._repos.progressRepo.findByLearnerId(learner.id);
     var completed = progress.filter(function(r) { return r.state === 'completed'; }).length;
-    var overdue = progress.filter(function(r) { return r.state === 'overdue'; }).length;
+    var inProgress = progress.filter(function(r) { return r.state === 'in_progress' || r.state === 'submitted'; }).length;
     var active = progress.filter(function(r) { return r.state !== 'completed'; })[0] || null;
 
     return {
@@ -40,7 +40,7 @@ class LmsProgressService {
       activeCourse: this._config.defaultCourseId || '',
       currentLesson: active ? active.lessonId : '',
       completedCount: completed,
-      overdueCount: overdue,
+      overdueCount: inProgress,
       nextAction: active ? 'Complete lesson ' + active.lessonId : 'Request next lesson',
       totalCount: progress.length
     };
