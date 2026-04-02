@@ -6,8 +6,13 @@ class SlackBlockKitBuilder {
   buildLessonCard(input) {
     var lessonId = input.id || input.lessonId || '';
     var title = input.title || 'Lesson';
-    var contentRef = input.contentRef || '[Insert Training Link]';
+    var contentRef = input.contentRef || '';
+    var objective = input.objective || '';
+    var coreContent = input.coreContent || '';
     var submitCmd = '/submit ' + lessonId + ' complete';
+    var lessonBody = contentRef
+      ? ':books: *Complete the training here:* <' + contentRef + '|Open Lesson>'
+      : ':books: *Lesson content:*\n' + (coreContent || objective || 'No lesson content provided yet.');
 
     return [
       { type: 'header', text: { type: 'plain_text', text: title, emoji: true } },
@@ -16,7 +21,7 @@ class SlackBlockKitBuilder {
         type: 'section',
         text: {
           type: 'mrkdwn',
-          text: ':books: *Complete the training here:* <' + contentRef + '|Open Lesson>\n\n:bulb: *Tip:* Take notes as you go — you\'ll need them for the verification question.'
+          text: lessonBody + '\n\n:bulb: *Tip:* Take notes as you go — you\'ll need them for the verification question.'
         }
       },
       { type: 'divider' },

@@ -10,6 +10,14 @@ class LmsLessonService {
   handleLesson(ctx) {
     var current = this.getCurrentLessonForLearner(ctx.userId);
     if (!current.ok) return { response_type: 'ephemeral', text: current.message };
+    var slackPayload = this._parseSlackPayload(current.lesson);
+    if (slackPayload) {
+      return {
+        response_type: 'ephemeral',
+        text: slackPayload.text || 'Your current lesson',
+        blocks: slackPayload.blocks || []
+      };
+    }
     return {
       response_type: 'ephemeral',
       text: 'Your current lesson',
@@ -40,16 +48,36 @@ class LmsLessonService {
   deliverLessonToLearner(learnerId, lessonId) {
     var learner = this._db.table('learners').findById(learnerId);
     if (!learner) return { ok: false, code: 'LEARNER_NOT_FOUND', message: 'Learner not found' };
+    var lesson = this._db.table('lessons').findById(lessonId) || { id: lessonId, title: 'Lesson' };
+    var slackPayload = this._parseSlackPayload(lesson);
+    var text = slackPayload ? (slackPayload.text || 'New lesson available') : 'New lesson available';
+    var blocks = slackPayload ? (slackPayload.blocks || []) : this._blocks.buildLessonCard(lesson);
 
     var dm = this._slack.openDm(learner.slackUserId);
     if (!dm.ok) return dm;
-    var sent = this._slack.postMessage(dm.channelId, 'New lesson available', this._blocks.buildLessonCard({ lessonId: lessonId }));
+    var sent = this._slack.postMessage(dm.channelId, text, blocks);
     if (!sent.ok) return sent;
 
     this._db.table('delivery_queue').insert({ learnerId: learnerId, lessonId: lessonId, status: 'delivered', runAt: new Date().toISOString() });
     var active = this._db.table('learner_progress').findAll().filter(function(r) { return r.learnerId === learnerId && r.lessonId === lessonId; })[0];
     if (active) this._db.table('learner_progress').update(active.id, { state: 'delivered' });
     return { ok: true, code: 'DELIVERED', learnerId: learnerId, lessonId: lessonId };
+  }
+
+  _parseSlackPayload(lesson) {
+    var raw = lesson && (lesson.slackPayload || lesson.slack_payload);
+    if (!raw) return null;
+
+    if (typeof raw === 'object') {
+      return raw;
+    }
+
+    try {
+      var parsed = JSON.parse(raw);
+      return parsed && typeof parsed === 'object' ? parsed : null;
+    } catch (err) {
+      return null;
+    }
   }
 
   deliverPendingLessons() {

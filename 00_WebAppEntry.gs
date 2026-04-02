@@ -10,10 +10,29 @@ function createHostDbClient(config) {
   db.schema('learners', schema(['id', 'slackUserId', 'email', 'name', 'status', 'createdAt', 'updatedAt', 'deletedAt']));
   db.schema('enrollment', schema(['id', 'learnerId', 'courseId', 'track', 'status', 'createdAt', 'updatedAt', 'deletedAt']));
   db.schema('lessons', schema(
-    ['id', 'courseId', 'moduleId', 'sequenceNumber', 'track', 'title', 'contentRef', 'active', 'createdAt', 'updatedAt', 'deletedAt'],
+    [
+      'id', 'courseId', 'moduleId', 'sequenceNumber', 'track',
+      'title', 'topic', 'objective', 'difficulty',
+      'hook', 'coreContent', 'insight', 'takeaway',
+      'mission', 'missionType', 'missionDuration', 'verification', 'submitBlock',
+      'contentRef', 'slackPayload', 'active', 'createdAt', 'updatedAt', 'deletedAt'
+    ],
     {
-      moduleId: { type: 'string', required: false, defaultValue: '' },
-      sequenceNumber: { type: 'string', required: false, defaultValue: '0' }
+      moduleId: { type: 'string', required: false, default: '' },
+      sequenceNumber: { type: 'string', required: false, default: '0' },
+      topic: { type: 'string', required: false, default: '' },
+      objective: { type: 'string', required: false, default: '' },
+      difficulty: { type: 'string', required: false, default: 'independent' },
+      hook: { type: 'string', required: false, default: '' },
+      coreContent: { type: 'string', required: false, default: '' },
+      insight: { type: 'string', required: false, default: '' },
+      takeaway: { type: 'string', required: false, default: '' },
+      mission: { type: 'string', required: false, default: '' },
+      missionType: { type: 'string', required: false, default: 'text' },
+      missionDuration: { type: 'string', required: false, default: '3 min' },
+      verification: { type: 'string', required: false, default: '' },
+      submitBlock: { type: 'string', required: false, default: '' },
+      slackPayload: { type: 'string', required: false, default: '' }
     }
   ));
   db.schema('learner_progress', schema(['id', 'learnerId', 'lessonId', 'state', 'dueAt', 'completedAt', 'createdAt', 'updatedAt', 'deletedAt']));

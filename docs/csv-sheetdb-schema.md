@@ -79,24 +79,49 @@ Unique sheet-backed tables found across the repo:
 - **Columns (ordered):**
   1. `id`
   2. `courseId`
-  3. `track`
-  4. `title`
-  5. `contentRef`
-  6. `active`
-  7. `createdAt`
-  8. `updatedAt`
-  9. `deletedAt`
+  3. `moduleId`
+  4. `sequenceNumber`
+  5. `track`
+  6. `title`
+  7. `topic`
+  8. `objective`
+  9. `difficulty`
+  10. `hook`
+  11. `coreContent`
+  12. `insight`
+  13. `takeaway`
+  14. `mission`
+  15. `missionType`
+  16. `missionDuration`
+  17. `verification`
+  18. `submitBlock`
+  19. `contentRef`
+  20. `slackPayload`
+  21. `active`
+  22. `createdAt`
+  23. `updatedAt`
+  24. `deletedAt`
 - **Column details:**
   - `id`: String, primary key. Auto-generated when omitted, though runtime sync prefers caller-supplied `row.id`.
   - `courseId`: String, optional in sync helper, defaults to empty string.
-  - `track`: String, optional, defaults to empty string.
-  - `title`: String, optional, defaults to empty string.
-  - `contentRef`: String, optional, defaults to empty string.
+  - `moduleId`: String, optional module reference for Universal Lesson Canvas grouping.
+  - `sequenceNumber`: String-encoded numeric sort index used for next-lesson sequencing.
+  - `track`: String legacy routing field, mirrored from `topic` when omitted.
+  - `title`: String lesson title from metadata.
+  - `topic`: String lesson topic from metadata.
+  - `objective`: String lesson objective text.
+  - `difficulty`: String level from metadata (default `independent`).
+  - `hook`, `coreContent`, `insight`, `takeaway`, `mission`, `verification`: String blocks for sections 01–06 of Universal Lesson Canvas.
+  - `missionType`: String mission response format (default `text`).
+  - `missionDuration`: String mission duration (default `3 min`).
+  - `submitBlock`: String submit instructions block text.
+  - `contentRef`: String optional external content pointer.
+  - `slackPayload`: Stringified JSON Slack payload (e.g., `{ "text": "...", "blocks": [...] }`) used for direct bot delivery.
   - `active`: String/Boolean-like flag. Sync helper persists `String(...)`; observed values: `'true'`, inherited row value.
   - `createdAt`: DateTime, auto-populated.
   - `updatedAt`: DateTime, auto-populated.
   - `deletedAt`: DateTime, optional soft-delete marker.
-- **Foreign keys:** none enforced, though `courseId` behaves like a course reference.
+- **Foreign keys:** none enforced, though `courseId` and `moduleId` behave like curriculum references.
 - **Soft delete:** enabled via `deletedAt`.
 - **AppSheet consumer evidence:** none found.
 
@@ -403,13 +428,34 @@ function registerRwrLmsSchemas(db) {
   });
 
   db.schema('lessons', {
-    columns: ['id', 'courseId', 'track', 'title', 'contentRef', 'active', 'createdAt', 'updatedAt', 'deletedAt'],
+    columns: [
+      'id', 'courseId', 'moduleId', 'sequenceNumber', 'track',
+      'title', 'topic', 'objective', 'difficulty',
+      'hook', 'coreContent', 'insight', 'takeaway',
+      'mission', 'missionType', 'missionDuration', 'verification', 'submitBlock',
+      'contentRef', 'slackPayload', 'active', 'createdAt', 'updatedAt', 'deletedAt'
+    ],
     fields: {
       id: { type: 'string' },
       courseId: { type: 'string' },
+      moduleId: { type: 'string', default: '' },
+      sequenceNumber: { type: 'string', default: '0' },
       track: { type: 'string' },
       title: { type: 'string' },
+      topic: { type: 'string', default: '' },
+      objective: { type: 'string', default: '' },
+      difficulty: { type: 'string', default: 'independent' },
+      hook: { type: 'string', default: '' },
+      coreContent: { type: 'string', default: '' },
+      insight: { type: 'string', default: '' },
+      takeaway: { type: 'string', default: '' },
+      mission: { type: 'string', default: '' },
+      missionType: { type: 'string', default: 'text' },
+      missionDuration: { type: 'string', default: '3 min' },
+      verification: { type: 'string', default: '' },
+      submitBlock: { type: 'string', default: '' },
       contentRef: { type: 'string' },
+      slackPayload: { type: 'string', default: '' },
       active: { type: 'string', default: 'true' }
     }
   });
