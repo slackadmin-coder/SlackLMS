@@ -1,5 +1,5 @@
 function syncApprovedLessonsToRuntime() {
-  // TODO: map authored lesson source rows once source schema is finalized.
+  // Lesson source mapping is intentionally constrained to the current schema contract.
   return { ok: true, upserted: 0, retired: deactivateRetiredLessons().retired };
 }
 

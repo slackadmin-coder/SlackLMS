@@ -1,33 +1,71 @@
 class LmsEnrollmentService {
-  constructor(db, slackApiClient, blocks, config) {
+  constructor(db, slackApiClient, blocks, config, repositories, workflowEngine, securityService) {
     this._db = db;
     this._slack = slackApiClient;
     this._blocks = blocks;
     this._config = config || {};
+    this._repos = repositories || {};
+    this._workflow = workflowEngine;
+    this._security = securityService || SecurityService;
   }
 
   enrollLearner(input) {
-    var learner = this.ensureLearnerRecord(input || {});
-    var enrollment = this.ensureEnrollmentRecord({
-      learnerId: learner.id,
-      courseId: (input && input.courseId) || this._config.defaultCourseId,
-      track: this._config.defaultTrack
+    var self = this;
+    return this._workflow.run('enrollment', input || {}, {
+      validate: function(ctx) {
+        var slackUserId = self._security.sanitizeInput(ctx.trigger.slackUserId);
+        if (!slackUserId) throw { code: 'INVALID_INPUT', message: 'slackUserId is required.' };
+        ctx.data.slackUserId = slackUserId;
+      },
+      process: function(ctx) {
+        ctx.data.learner = self.ensureLearnerRecord({
+          slackUserId: ctx.data.slackUserId,
+          email: self._security.sanitizeInput(ctx.trigger.email || ''),
+          name: self._security.sanitizeInput(ctx.trigger.name || '')
+        });
+
+        ctx.data.enrollment = self.ensureEnrollmentRecord({
+          learnerId: ctx.data.learner.id,
+          courseId: self._security.sanitizeInput(ctx.trigger.courseId || self._config.defaultCourseId),
+          track: self._config.defaultTrack
+        });
+
+        ctx.data.queue = self.queueFirstLesson({
+          learnerId: ctx.data.learner.id,
+          courseId: ctx.data.enrollment.courseId
+        });
+      },
+      persist: function(ctx) {
+        self.sendWelcomeDm({
+          slackUserId: ctx.data.learner.slackUserId,
+          learnerId: ctx.data.learner.id,
+          courseId: ctx.data.enrollment.courseId
+        });
+      },
+      respond: function(ctx) {
+        ctx.result = {
+          ok: true,
+          code: 'ENROLLED',
+          learnerId: ctx.data.learner.id,
+          enrollmentId: ctx.data.enrollment.id,
+          queueId: ctx.data.queue.queueId || '',
+          correlationId: ctx.correlationId
+        };
+      },
+      audit: function(ctx) {
+        self._db.audit('enroll_learner', 'enrollment', { learnerId: ctx.data.learner.id, enrollmentId: ctx.data.enrollment.id, correlationId: ctx.correlationId });
+      }
     });
-    var queued = this.queueFirstLesson({ learnerId: learner.id, courseId: enrollment.courseId });
-    this.sendWelcomeDm({ slackUserId: learner.slackUserId, learnerId: learner.id, courseId: enrollment.courseId });
-    this._db.audit('enroll_learner', 'enrollment', { learnerId: learner.id, enrollmentId: enrollment.id });
-    return { ok: true, code: 'ENROLLED', learnerId: learner.id, enrollmentId: enrollment.id, queueId: queued.queueId || '' };
   }
 
   findLearnerBySlackUserId(slackUserId) {
-    if (!slackUserId) return null;
-    return this._db.table('learners').findAll().filter(function(row) { return row.slackUserId === slackUserId; })[0] || null;
+    return this._repos.learnerRepo.findBySlackUserId(slackUserId);
   }
 
   ensureLearnerRecord(input) {
     var existing = this.findLearnerBySlackUserId(input.slackUserId);
     if (existing) return existing;
-    return this._db.table('learners').insert({
+    return this._repos.learnerRepo.insert({
       slackUserId: input.slackUserId,
       email: input.email || '',
       name: input.name || '',
@@ -55,20 +93,12 @@ class LmsEnrollmentService {
   }
 
   queueFirstLesson(input) {
-    var lessons = this._db.table('lessons').findAll().filter(function(row) {
-      return row.courseId === input.courseId && String(row.active) === 'true' && !String(row.deletedAt || '').trim();
-    }).sort(function(a, b) {
-      return Number(a.sequenceNumber || 0) - Number(b.sequenceNumber || 0);
-    });
-
-    var firstLesson = lessons[0];
+    var firstLesson = this._repos.lessonRepo.findActiveByCourse(input.courseId)[0];
     if (!firstLesson) {
       return { ok: false, code: 'NO_LESSONS_AVAILABLE', message: 'No active lessons found for course.' };
     }
 
-    var existingProgress = this._db.table('learner_progress').findAll().filter(function(row) {
-      return row.learnerId === input.learnerId && row.lessonId === firstLesson.id;
-    })[0];
+    var existingProgress = this._repos.progressRepo.findByLearnerAndLesson(input.learnerId, firstLesson.id);
 
     if (existingProgress && existingProgress.state !== 'completed') {
       return {
@@ -82,7 +112,7 @@ class LmsEnrollmentService {
     }
 
     var nowIso = new Date().toISOString();
-    this._db.table('learner_progress').insert({
+    this._repos.progressRepo.insert({
       learnerId: input.learnerId,
       lessonId: firstLesson.id,
       state: 'queued',
@@ -93,7 +123,11 @@ class LmsEnrollmentService {
       learnerId: input.learnerId,
       lessonId: firstLesson.id,
       status: 'queued',
-      runAt: nowIso
+      priority: 'normal',
+      runAt: nowIso,
+      attempts: '0',
+      availableAt: nowIso,
+      conditionExpr: ''
     });
 
     return { ok: true, code: 'FIRST_LESSON_QUEUED', learnerId: input.learnerId, lessonId: firstLesson.id, queueId: queueRow.id };

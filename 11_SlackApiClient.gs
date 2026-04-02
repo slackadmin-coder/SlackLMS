@@ -2,7 +2,7 @@ class SlackApiClient {
   constructor(config, retryResolver) {
     this._config = config || {};
     this._retry = retryResolver || null;
-    this._token = String(this._config.slackBotToken || '');
+    this._token = String(this._config.slackBotToken || this._config.slackBotTokenFallback || '');
   }
 
   postMessage(channel, text, blocks) {
@@ -35,7 +35,7 @@ class SlackApiClient {
 
   _call(method, payload) {
     if (!this._token) {
-      return { ok: false, code: 'MISSING_BOT_TOKEN', message: 'SLACK_BOT_TOKEN missing', retryable: false };
+      return ErrorService.create('MISSING_BOT_TOKEN', 'SLACK_BOT_TOKEN missing', false);
     }
 
     var response;

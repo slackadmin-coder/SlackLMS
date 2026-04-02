@@ -65,16 +65,16 @@ class OnboardingService {
     }
   }
 
-  advanceOnboardingState(learnerId, completedTaskId) {
+  advanceOnboardingState(learnerId, completedTaskId, status) {
     try {
       this._db.table('onboarding_task_log').insert({
         checklistItemId: completedTaskId,
         learnerId: learnerId,
-        eventType: 'completed',
+        eventType: status || 'completed',
         eventBy: learnerId,
-        note: 'Marked complete via Slack'
+        note: 'Checklist updated via Slack action'
       });
-      this._db.table('onboarding_checklists').update(completedTaskId, { status: 'complete' });
+      this._db.table('onboarding_checklists').update(completedTaskId, { status: status || 'complete' });
       return { ok: true, code: 'TASK_ADVANCED' };
     } catch (err) {
       return { ok: false, code: 'ADVANCE_FAILED', message: String(err.message || err) };

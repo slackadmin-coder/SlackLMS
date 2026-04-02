@@ -3,6 +3,7 @@ var ConfigBootstrap = {
     var helper = new ScriptPropertiesHelper();
     return {
       slackBotToken: helper.getRequired('SLACK_BOT_TOKEN'),
+      slackBotTokenFallback: helper.get('SLACK_BOT_TOKEN_FALLBACK', ''),
       slackSigningSecret: helper.getRequired('SLACK_SIGNING_SECRET'),
       spreadsheetId: helper.get('SHEET_DB_SPREADSHEET_ID', helper.getRequired('SPREADSHEET_ID')),
       adminUserIds: this._csv(helper.get('ADMIN_USER_IDS', '')),
@@ -20,7 +21,10 @@ var ConfigBootstrap = {
       maintenanceMode: helper.get('MAINTENANCE_MODE', 'false') === 'true',
       healthCheckEnabled: helper.get('HEALTH_CHECK_ENABLED', 'true') === 'true',
       quietHoursStart: Number(helper.get('QUIET_HOURS_START', '21')),
-      quietHoursEnd: Number(helper.get('QUIET_HOURS_END', '7'))
+      quietHoursEnd: Number(helper.get('QUIET_HOURS_END', '7')),
+      enableRetry: helper.get('ENABLE_RETRY', 'true') === 'true',
+      enableReporting: helper.get('ENABLE_REPORTING', 'true') === 'true',
+      enableOnboarding: helper.get('ENABLE_ONBOARDING', 'true') === 'true'
     };
   },
 

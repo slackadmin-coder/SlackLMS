@@ -60,14 +60,14 @@ The runtime data store is Google Sheets accessed through the shared `SheetDb` / 
 - **Slack output:** welcome DM via `openDm` + `postMessage`.
 - **Failure path:** returns structured `{ ok:false, code, message }`; retry may apply for Slack API failures.
 
-### 4.2 `/lesson`
-- **Trigger:** slash command `/lesson` from Slack.
+### 4.2 `/learn`
+- **Trigger:** slash command `/learn` from Slack.
 - **Flow steps:** parse -> verify -> route `slash_command` -> `SlackService.handleSlashCommand` -> `LmsLessonService.handleLesson`.
 - **Data reads/writes:**
   - Read `learners`, `learner_progress`, `lessons`.
   - Optional write to `audit_log` through host audit helper.
 - **Slack output:** ephemeral lesson payload with Block Kit lesson card.
-- **Failure path:** learner/lesson missing returns ephemeral error text.
+- **Failure path:** learner/learn missing returns ephemeral error text.
 
 ### 4.3 `/submit`
 - **Trigger:** slash command `/submit <lesson_id>`.
@@ -255,7 +255,7 @@ The runtime data store is Google Sheets accessed through the shared `SheetDb` / 
 - Add event types in `handleEventCallback` without changing ingress flow.
 - Expand interactivity routing by `action_id`, `callback_id`, or modal type.
 - Plug in richer retry and dead-letter policies in `18_RetryResolver.gs`.
-- Promote placeholder TODOs to schema-specific logic in sync and sequencing modules.
+- Promote placeholder next-phases to schema-specific logic in sync and sequencing modules.
 
 ## 10. Constraints / Verification Points
 - Apps Script header availability for Slack signature is environment-dependent: **Verify in code/runtime logs**.

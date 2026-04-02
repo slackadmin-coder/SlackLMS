@@ -2,35 +2,32 @@
  * Central request router for normalized Slack envelopes.
  */
 var SlackRouter = {
+  _routeRegistry: {
+    url_verification: 'handleUrlVerification',
+    slash_command: 'handleSlashCommand',
+    interactivity: 'handleInteractivity',
+    event_callback: 'handleEventCallback',
+    workflow_webhook: 'handleWorkflowWebhook'
+  },
+
   route: function(parsed, deps) {
     if (!parsed || !parsed.ok) {
-      return { ok: false, code: 'PARSE_FAILED', response: { ok: false, error: 'invalid_request' } };
+      return { ok: false, code: 'PARSE_FAILED', response: ErrorService.create('PARSE_FAILED', 'invalid_request', false) };
     }
 
     if (parsed.routeType === 'url_verification') {
       return { ok: true, code: 'URL_VERIFICATION', response: { challenge: parsed.body.challenge } };
     }
 
-    if (parsed.routeType === 'slash_command') {
-      return { ok: true, code: 'SLASH_OK', response: deps.slackService.handleSlashCommand(parsed) };
+    var handlerName = this._routeRegistry[parsed.routeType];
+    if (!handlerName || !deps.slackService || typeof deps.slackService[handlerName] !== 'function') {
+      return {
+        ok: false,
+        code: 'UNSUPPORTED_ROUTE',
+        response: ErrorService.create('UNSUPPORTED_ROUTE', 'unsupported_route: ' + parsed.routeType, false)
+      };
     }
 
-    if (parsed.routeType === 'interactivity') {
-      return { ok: true, code: 'INTERACTIVITY_OK', response: deps.slackService.handleInteractivity(parsed) };
-    }
-
-    if (parsed.routeType === 'event_callback') {
-      return { ok: true, code: 'EVENT_OK', response: deps.slackService.handleEventCallback(parsed) };
-    }
-
-    if (parsed.routeType === 'workflow_webhook') {
-      return { ok: true, code: 'WORKFLOW_OK', response: deps.slackService.handleWorkflowWebhook(parsed) };
-    }
-
-    return {
-      ok: false,
-      code: 'UNSUPPORTED_ROUTE',
-      response: { ok: false, error: 'unsupported_route', routeType: parsed.routeType }
-    };
+    return { ok: true, code: parsed.routeType.toUpperCase(), response: deps.slackService[handlerName](parsed) };
   }
 };
