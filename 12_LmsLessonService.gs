@@ -27,6 +27,10 @@ class LmsLessonService {
     };
   }
 
+  handleMix(ctx) {
+    return this.handleLesson(ctx);
+  }
+
   getCurrentLessonForLearner(slackUserId) {
     var learner = this._repos.learnerRepo.findBySlackUserId(slackUserId);
     if (!learner) return { ok: false, code: 'LEARNER_NOT_FOUND', message: 'Learner not found.' };

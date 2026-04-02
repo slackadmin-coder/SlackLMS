@@ -18,6 +18,13 @@ class LmsProgressService {
     };
   }
 
+  handleReinforce(ctx) {
+    var snapshot = this.getProgressSnapshot(ctx.userId);
+    if (!snapshot.ok) return { response_type: 'ephemeral', text: snapshot.message };
+    var lessonId = snapshot.currentLesson || 'your current module';
+    return { response_type: 'ephemeral', text: 'Reinforcement focus: review ' + lessonId + ' and resubmit with `/submit ' + lessonId + ' complete`.' };
+  }
+
   getProgressSnapshot(slackUserId) {
     var learner = this._repos.learnerRepo.findBySlackUserId(slackUserId);
     if (!learner) return { ok: false, code: 'LEARNER_NOT_FOUND', message: 'Learner not found.' };

@@ -80,4 +80,21 @@ class OnboardingService {
       return { ok: false, code: 'ADVANCE_FAILED', message: String(err.message || err) };
     }
   }
+
+  handleOffboard(ctx) {
+    var email = SecurityService.sanitizeInput((ctx && ctx.params && ctx.params.text) || '');
+    if (!email) {
+      return { response_type: 'ephemeral', text: 'Usage: /offboard [email]' };
+    }
+
+    this._db.audit('offboard_requested', 'onboarding_requests', {
+      requestorUserId: ctx.userId || '',
+      targetEmail: email
+    });
+
+    return {
+      response_type: 'ephemeral',
+      text: ':white_check_mark: Offboarding request recorded for ' + email + '.'
+    };
+  }
 }

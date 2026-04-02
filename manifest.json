@@ -39,6 +39,36 @@
         "url": "https://script.google.com/macros/s/AKfycbxACBb8JvIStCL87-OLdKgxM2axtxRtCfzCW9XAT6m-j6oF7M-mFMBASjTDhG7N6P2r/exec",
         "description": "Trigger onboarding pipeline",
         "should_escape": false
+      },
+      {
+        "command": "/gaps",
+        "url": "https://script.google.com/macros/s/AKfycbxACBb8JvIStCL87-OLdKgxM2axtxRtCfzCW9XAT6m-j6oF7M-mFMBASjTDhG7N6P2r/exec",
+        "description": "Show overdue learning gaps",
+        "should_escape": false
+      },
+      {
+        "command": "/audit",
+        "url": "https://script.google.com/macros/s/AKfycbxACBb8JvIStCL87-OLdKgxM2axtxRtCfzCW9XAT6m-j6oF7M-mFMBASjTDhG7N6P2r/exec",
+        "description": "Show audit summary snapshot",
+        "should_escape": false
+      },
+      {
+        "command": "/mix",
+        "url": "https://script.google.com/macros/s/AKfycbxACBb8JvIStCL87-OLdKgxM2axtxRtCfzCW9XAT6m-j6oF7M-mFMBASjTDhG7N6P2r/exec",
+        "description": "Get mixed learning content",
+        "should_escape": false
+      },
+      {
+        "command": "/reinforce",
+        "url": "https://script.google.com/macros/s/AKfycbxACBb8JvIStCL87-OLdKgxM2axtxRtCfzCW9XAT6m-j6oF7M-mFMBASjTDhG7N6P2r/exec",
+        "description": "Get reinforcement guidance",
+        "should_escape": false
+      },
+      {
+        "command": "/offboard",
+        "url": "https://script.google.com/macros/s/AKfycbxACBb8JvIStCL87-OLdKgxM2axtxRtCfzCW9XAT6m-j6oF7M-mFMBASjTDhG7N6P2r/exec",
+        "description": "Record an offboarding request",
+        "should_escape": false
       }
     ]
   },
