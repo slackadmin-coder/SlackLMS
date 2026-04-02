@@ -96,10 +96,11 @@ Unique sheet-backed tables found across the repo:
   17. `verification`
   18. `submitBlock`
   19. `contentRef`
-  20. `active`
-  21. `createdAt`
-  22. `updatedAt`
-  23. `deletedAt`
+  20. `slackPayload`
+  21. `active`
+  22. `createdAt`
+  23. `updatedAt`
+  24. `deletedAt`
 - **Column details:**
   - `id`: String, primary key. Auto-generated when omitted, though runtime sync prefers caller-supplied `row.id`.
   - `courseId`: String, optional in sync helper, defaults to empty string.
@@ -115,6 +116,7 @@ Unique sheet-backed tables found across the repo:
   - `missionDuration`: String mission duration (default `3 min`).
   - `submitBlock`: String submit instructions block text.
   - `contentRef`: String optional external content pointer.
+  - `slackPayload`: Stringified JSON Slack payload (e.g., `{ "text": "...", "blocks": [...] }`) used for direct bot delivery.
   - `active`: String/Boolean-like flag. Sync helper persists `String(...)`; observed values: `'true'`, inherited row value.
   - `createdAt`: DateTime, auto-populated.
   - `updatedAt`: DateTime, auto-populated.
@@ -431,7 +433,7 @@ function registerRwrLmsSchemas(db) {
       'title', 'topic', 'objective', 'difficulty',
       'hook', 'coreContent', 'insight', 'takeaway',
       'mission', 'missionType', 'missionDuration', 'verification', 'submitBlock',
-      'contentRef', 'active', 'createdAt', 'updatedAt', 'deletedAt'
+      'contentRef', 'slackPayload', 'active', 'createdAt', 'updatedAt', 'deletedAt'
     ],
     fields: {
       id: { type: 'string' },
@@ -453,6 +455,7 @@ function registerRwrLmsSchemas(db) {
       verification: { type: 'string', default: '' },
       submitBlock: { type: 'string', default: '' },
       contentRef: { type: 'string' },
+      slackPayload: { type: 'string', default: '' },
       active: { type: 'string', default: 'true' }
     }
   });

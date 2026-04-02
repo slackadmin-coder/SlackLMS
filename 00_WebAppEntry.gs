@@ -15,7 +15,7 @@ function createHostDbClient(config) {
       'title', 'topic', 'objective', 'difficulty',
       'hook', 'coreContent', 'insight', 'takeaway',
       'mission', 'missionType', 'missionDuration', 'verification', 'submitBlock',
-      'contentRef', 'active', 'createdAt', 'updatedAt', 'deletedAt'
+      'contentRef', 'slackPayload', 'active', 'createdAt', 'updatedAt', 'deletedAt'
     ],
     {
       moduleId: { type: 'string', required: false, default: '' },
@@ -31,7 +31,8 @@ function createHostDbClient(config) {
       missionType: { type: 'string', required: false, default: 'text' },
       missionDuration: { type: 'string', required: false, default: '3 min' },
       verification: { type: 'string', required: false, default: '' },
-      submitBlock: { type: 'string', required: false, default: '' }
+      submitBlock: { type: 'string', required: false, default: '' },
+      slackPayload: { type: 'string', required: false, default: '' }
     }
   ));
   db.schema('learner_progress', schema(['id', 'learnerId', 'lessonId', 'state', 'dueAt', 'completedAt', 'createdAt', 'updatedAt', 'deletedAt']));

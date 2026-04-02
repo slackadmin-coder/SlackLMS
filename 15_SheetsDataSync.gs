@@ -7,6 +7,10 @@ function upsertLessonRuntimeRecord(row) {
   var db = createHostDbClient(ConfigBootstrap.load());
   var table = db.table('lessons');
   var source = row || {};
+  var slackPayload = source.slackPayload || source.slack_payload || '';
+  if (slackPayload && typeof slackPayload !== 'string') {
+    slackPayload = JSON.stringify(slackPayload);
+  }
   var lessonPayload = {
     courseId: source.courseId || '',
     moduleId: source.moduleId || '',
@@ -26,6 +30,7 @@ function upsertLessonRuntimeRecord(row) {
     verification: source.verification || '',
     submitBlock: source.submitBlock || '',
     contentRef: source.contentRef || '',
+    slackPayload: slackPayload || '',
     active: String(source.active == null ? 'true' : source.active)
   };
   var existing = source.id ? table.findById(source.id) : null;

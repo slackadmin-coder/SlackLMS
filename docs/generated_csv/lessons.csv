@@ -1,1 +1,1 @@
-id,courseId,moduleId,sequenceNumber,track,title,topic,objective,difficulty,hook,coreContent,insight,takeaway,mission,missionType,missionDuration,verification,submitBlock,contentRef,active,createdAt,updatedAt,deletedAt
+id,courseId,moduleId,sequenceNumber,track,title,topic,objective,difficulty,hook,coreContent,insight,takeaway,mission,missionType,missionDuration,verification,submitBlock,contentRef,slackPayload,active,createdAt,updatedAt,deletedAt
