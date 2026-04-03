@@ -31,9 +31,9 @@ Key principle: keep ingress thin and move behavior into modular services.
 - `code.gs` — anchor web app entrypoint (thin host shell).
 - `00_WebAppEntry.gs` — dependency and DB bootstrap.
 - `01`–`04` — router/parser/security/dispatch layers.
-- `05`–`10` — LMS domain service scaffolds.
-- `11`–`13` — Slack API client, Block Kit builders, state machine.
-- `14`–`19` — scheduler, sync, config, health, retry, test harness.
+- Domain services — `09_LmsEnrollmentService.gs`, `12_LmsLessonService.gs`, `13_LmsProgressService.gs`, `13a_LmsCompletionService.gs`, `14_LmsReminderService.gs`, `ReportService.gs`.
+- Integrations/state — `11_SlackApiClient.gs`, `12_SlackBlockKitBuilder.gs`, `13_LearnerProgressStateMachine.gs`.
+- Ops/support — `14_Scheduler.gs`, `15_SheetsDataSync.gs`, `16_ConfigBootstrap.gs`, `17_HealthMonitor.gs`, `18_RetryResolver.gs`, `19_HostTestHarness.gs`.
 - `manifest.json` — Slack app manifest.
 - `sheet_db_lib/` — shared library (DB/config/audit helpers).
 - `md_mirror/`, `pdf_mirror/` — mirrored reference docs.
@@ -56,10 +56,10 @@ See `architecture.md` for the full workflow map.
 - Google Apps Script (V8 runtime)
 - Google Sheets (runtime DB)
 - Slack App + Events API + Interactivity
-- Shared in-repo LMS library utilities (`SheetDb`, script props helper, audit/transactions)
+- Shared in-repo LMS library utilities (`SheetDb`, `23_Config.gs` DB config, script props helper, audit/transactions)
 
 ## 7. Configuration
-Set Script Properties in Apps Script:
+Set Script Properties in Apps Script (loaded via `16_ConfigBootstrap.gs`):
 - Required:
   - `SLACK_BOT_TOKEN`
   - `SLACK_SIGNING_SECRET`

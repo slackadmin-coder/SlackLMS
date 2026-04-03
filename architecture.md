@@ -27,12 +27,12 @@ The runtime data store is Google Sheets accessed through the shared `SheetDb` / 
 - **Application dispatch**
   - `03_SlackService.gs`: slash/interactivity/event/workflow routing.
 - **Domain services**
-  - `05_LmsEnrollmentService.gs`
-  - `06_LmsLessonService.gs`
-  - `07_LmsProgressService.gs`
-  - `08_LmsCompletionService.gs`
-  - `09_LmsReminderService.gs`
-  - `10_LmsReportService.gs`
+  - `09_LmsEnrollmentService.gs`
+  - `12_LmsLessonService.gs`
+  - `13_LmsProgressService.gs`
+  - `13a_LmsCompletionService.gs`
+  - `14_LmsReminderService.gs`
+  - `ReportService.gs`
 - **Integrations and builders**
   - `11_SlackApiClient.gs`
   - `12_SlackBlockKitBuilder.gs`
@@ -129,7 +129,7 @@ The runtime data store is Google Sheets accessed through the shared `SheetDb` / 
 
 ### 4.10 Reporting
 - **Trigger:** `runWeeklyAdminReport` trigger and optional `/report` command placeholder.
-- **Flow steps:** dependency bootstrap -> `LmsReportService` summary methods.
+- **Flow steps:** dependency bootstrap -> `ReportService` summary methods.
 - **Data reads/writes:**
   - Read `learners`, `enrollment`, `learner_progress`.
   - Optional write/audit in future implementation.
@@ -203,7 +203,7 @@ The runtime data store is Google Sheets accessed through the shared `SheetDb` / 
 
 ### Services
 - `03_SlackService.gs` command/event/interactivity registries
-- `05`–`10` domain service modules
+- `09_LmsEnrollmentService.gs`, `12_LmsLessonService.gs`, `13_LmsProgressService.gs`, `13a_LmsCompletionService.gs`, `14_LmsReminderService.gs`, `ReportService.gs`
 
 ### DB Layer
 - `00_WebAppEntry.gs#createHostDbClient`
@@ -225,7 +225,8 @@ The runtime data store is Google Sheets accessed through the shared `SheetDb` / 
 - `17_HealthMonitor.gs`
 
 ### Config
-- `16_ConfigBootstrap.gs`
+- `16_ConfigBootstrap.gs` (authoritative host runtime/script property loading)
+- `23_Config.gs` (SheetDb client-only config contract)
 - `sheet_db_lib/10_ScriptProperties.gs`
 
 ### Test Harness
@@ -268,7 +269,7 @@ The runtime data store is Google Sheets accessed through the shared `SheetDb` / 
 - Host shell: `code.gs`
 - Host DI/bootstrap: `00_WebAppEntry.gs`
 - Router/parser/security/service: `01`–`04`
-- Domain services: `05`–`10`
+- Domain services: `09_LmsEnrollmentService.gs`, `12_LmsLessonService.gs`, `13_LmsProgressService.gs`, `13a_LmsCompletionService.gs`, `14_LmsReminderService.gs`, `ReportService.gs`
 - Integrations/builders/state: `11`–`13`
 - Scheduler/sync/config/health/retry/tests: `14`–`19`
 - Shared library: `sheet_db_lib/*`
