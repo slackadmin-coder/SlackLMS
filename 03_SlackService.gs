@@ -114,10 +114,8 @@ class SlackService {
   }
 
   _handleOnboard(parsed) {
-    var adminIds = this._config.adminUserIds || [];
-    if (adminIds.indexOf(parsed.userId) === -1) {
-      return { response_type: 'ephemeral', text: ':lock: /onboard is restricted to admins.' };
-    }
+    var adminAccess = this._requireAdmin(parsed, '/onboard');
+    if (adminAccess) return adminAccess;
     var email = this._security.sanitizeInput((parsed.params && parsed.params.text) || '');
     if (!email) {
       return { response_type: 'ephemeral', text: 'Usage: /onboard [email]' };
@@ -135,6 +133,8 @@ class SlackService {
   }
 
   _handleReport(parsed) {
+    var adminAccess = this._requireAdmin(parsed, '/report');
+    if (adminAccess) return adminAccess;
     if (this._configRepo && !this._configRepo.getFlag('enable_reporting', true)) {
       return { response_type: 'ephemeral', text: ':warning: Reporting feature flag is disabled.' };
     }
@@ -147,7 +147,9 @@ class SlackService {
   }
 
   _handleAudit(parsed) {
-    return this._report.handleAudit(parsed);
+    var adminAccess = this._requireAdmin(parsed, '/audit');
+    if (adminAccess) return adminAccess;
+    return this._onboarding.handleAuditQuery(parsed);
   }
 
   _handleMix(parsed) {
@@ -159,7 +161,15 @@ class SlackService {
   }
 
   _handleOffboard(parsed) {
+    var adminAccess = this._requireAdmin(parsed, '/offboard');
+    if (adminAccess) return adminAccess;
     return this._onboarding.handleOffboard(parsed);
+  }
+
+  _requireAdmin(parsed, commandName) {
+    var adminIds = this._config.adminUserIds || [];
+    if (adminIds.indexOf(parsed.userId) !== -1) return null;
+    return { response_type: 'ephemeral', text: ':lock: ' + commandName + ' is restricted to admins.' };
   }
 
   _handleDm(event) {

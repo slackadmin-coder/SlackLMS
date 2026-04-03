@@ -31,7 +31,13 @@ var AppSheetWebhook = {
       return deps.reminderService.sendReminderForLearner(payload.learnerId || '');
     }
     if (action === 'archive_learner') {
-      return { ok: false, code: 'NOT_IMPLEMENTED', message: 'archive_learner not yet implemented.' };
+      return deps.onboardingService.offboardLearner({
+        learnerId: payload.learnerId || '',
+        slackUserId: payload.slackUserId || '',
+        email: payload.email || '',
+        requestorUserId: payload.requestorUserId || 'appsheet',
+        source: 'appsheet_archive_learner'
+      });
     }
     return { ok: false, code: 'UNKNOWN_ACTION', message: 'Unrecognised AppSheet action: ' + action };
   }
