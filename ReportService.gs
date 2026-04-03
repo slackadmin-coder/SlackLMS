@@ -57,7 +57,11 @@ class ReportService {
   }
 
   buildOverdueSummary() {
-    var rows = this._db.table('learner_progress').findAll().filter(function(r) { return r.state === 'in_progress' || r.state === 'submitted'; });
+    var offboarded = this._getOffboardedLearnerIdSet();
+    var rows = this._db.table('learner_progress').findAll().filter(function(r) {
+      if (offboarded[r.learnerId]) return false;
+      return r.state === 'in_progress' || r.state === 'submitted';
+    });
     return { ok: true, inProgressCount: rows.length, items: rows };
   }
 
@@ -65,18 +69,22 @@ class ReportService {
     var learners = this._db.table('learners').findAll();
     var progress = this._db.table('learner_progress').findAll();
     var enrollment = this._db.table('enrollment').findAll();
+    var offboarded = this._getOffboardedLearnerIdSet(learners, enrollment);
+    var activeLearners = learners.filter(function(row) { return !offboarded[row.id]; });
+    var activeEnrollment = enrollment.filter(function(row) { return !offboarded[row.learnerId]; });
+    var activeProgress = progress.filter(function(row) { return !offboarded[row.learnerId]; });
 
-    var completed = progress.filter(function(r) { return r.state === 'completed'; }).length;
-    var submitted = progress.filter(function(r) { return r.state === 'submitted'; }).length;
-    var inProgressItems = progress.filter(function(r) { return r.state === 'in_progress' || r.state === 'submitted'; });
-    var completionRate = progress.length ? Number((completed / progress.length * 100).toFixed(2)) : 0;
+    var completed = activeProgress.filter(function(r) { return r.state === 'completed'; }).length;
+    var submitted = activeProgress.filter(function(r) { return r.state === 'submitted'; }).length;
+    var inProgressItems = activeProgress.filter(function(r) { return r.state === 'in_progress' || r.state === 'submitted'; });
+    var completionRate = activeProgress.length ? Number((completed / activeProgress.length * 100).toFixed(2)) : 0;
 
     return {
       ok: true,
       generatedAt: new Date().toISOString(),
       totals: {
-        learners: learners.length,
-        enrollments: enrollment.length,
+        learners: activeLearners.length,
+        enrollments: activeEnrollment.length,
         completed: completed,
         submitted: submitted,
         inProgress: inProgressItems.length,
@@ -85,5 +93,22 @@ class ReportService {
       inProgressLessons: inProgressItems,
       jsonReady: true
     };
+  }
+
+  _getOffboardedLearnerIdSet(learnersRows, enrollmentRows) {
+    var learners = learnersRows || this._db.table('learners').findAll();
+    var enrollment = enrollmentRows || this._db.table('enrollment').findAll();
+    var map = {};
+
+    learners.forEach(function(row) {
+      var status = String(row.status || '').toLowerCase();
+      if (status === 'offboarded' || status === 'inactive') map[row.id] = true;
+    });
+    enrollment.forEach(function(row) {
+      var status = String(row.status || '').toLowerCase();
+      if (status === 'offboarded' || status === 'inactive') map[row.learnerId] = true;
+    });
+
+    return map;
   }
 }

@@ -86,15 +86,177 @@ class OnboardingService {
     if (!email) {
       return { response_type: 'ephemeral', text: 'Usage: /offboard [email]' };
     }
+    var result = this.offboardLearner({
+      requestorUserId: (ctx && ctx.userId) || 'system',
+      email: email,
+      source: 'slash_command'
+    });
+    if (!result.ok) {
+      return { response_type: 'ephemeral', text: ':warning: ' + (result.message || result.code || 'Unable to offboard learner.') };
+    }
+    return { response_type: 'ephemeral', text: ':white_check_mark: Offboarded ' + email + '. Cancelled queue items: ' + String(result.cancelledQueueItems || 0) + '.' };
+  }
 
-    this._db.audit('offboard_requested', 'onboarding_requests', {
-      requestorUserId: ctx.userId || '',
-      targetEmail: email
+  detectInactiveLearners(daysThreshold) {
+    var thresholdDays = Number(daysThreshold || 3);
+    var cutoffMs = Date.now() - (thresholdDays * 24 * 60 * 60 * 1000);
+    var learners = this._db.table('learners').findAll();
+    var progressRows = this._db.table('learner_progress').findAll();
+    var submissions = this._db.table('submission_log').findAll();
+
+    var latestByLearner = {};
+    var pushDate = function(learnerId, isoDate) {
+      var parsed = Date.parse(String(isoDate || ''));
+      if (!learnerId || isNaN(parsed)) return;
+      if (!latestByLearner[learnerId] || latestByLearner[learnerId] < parsed) latestByLearner[learnerId] = parsed;
+    };
+
+    learners.forEach(function(row) { pushDate(row.id, row.updatedAt || row.createdAt); });
+    progressRows.forEach(function(row) { pushDate(row.learnerId, row.updatedAt || row.completedAt || row.createdAt); });
+    submissions.forEach(function(row) { pushDate(row.learnerId, row.createdAt || row.updatedAt); });
+
+    var inactive = learners.filter(function(learner) {
+      if (learner.status === 'offboarded' || learner.status === 'inactive') return false;
+      var lastActivityMs = latestByLearner[learner.id] || Date.parse(String(learner.createdAt || ''));
+      return !!lastActivityMs && lastActivityMs < cutoffMs;
+    }).map(function(learner) {
+      return {
+        learnerId: learner.id,
+        email: learner.email || '',
+        slackUserId: learner.slackUserId || '',
+        lastActivityAt: new Date(latestByLearner[learner.id]).toISOString()
+      };
     });
 
     return {
-      response_type: 'ephemeral',
-      text: ':white_check_mark: Offboarding request recorded for ' + email + '.'
+      ok: true,
+      thresholdDays: thresholdDays,
+      cutoffAt: new Date(cutoffMs).toISOString(),
+      count: inactive.length,
+      learners: inactive
     };
+  }
+
+  queryAuditLog(input) {
+    var filter = input || {};
+    var fromMs = Date.parse(String(filter.from || ''));
+    var toMs = Date.parse(String(filter.to || ''));
+    var actor = String(filter.actor || '').trim();
+    var resourceType = String(filter.resourceType || '').trim();
+    var resourceId = String(filter.resourceId || '').trim();
+
+    var rows = this._db.table('audit_log').findAll().filter(function(row) {
+      var rowMs = Date.parse(String(row.createdAt || ''));
+      if (!isNaN(fromMs) && (isNaN(rowMs) || rowMs < fromMs)) return false;
+      if (!isNaN(toMs) && (isNaN(rowMs) || rowMs > toMs)) return false;
+      if (actor && row.actor !== actor) return false;
+      if (resourceType && row.resourceType !== resourceType) return false;
+      if (resourceId && row.resourceId !== resourceId) return false;
+      return true;
+    }).sort(function(a, b) { return Date.parse(String(b.createdAt || '')) - Date.parse(String(a.createdAt || '')); });
+
+    return {
+      ok: true,
+      filters: {
+        from: isNaN(fromMs) ? '' : new Date(fromMs).toISOString(),
+        to: isNaN(toMs) ? '' : new Date(toMs).toISOString(),
+        actor: actor,
+        resourceType: resourceType,
+        resourceId: resourceId
+      },
+      count: rows.length,
+      items: rows
+    };
+  }
+
+  handleAuditQuery(ctx) {
+    var text = SecurityService.sanitizeInput((ctx && ctx.params && ctx.params.text) || '');
+    var parsed = this._parseAuditFilterText(text);
+    var audit = this.queryAuditLog(parsed);
+    var preview = audit.items.slice(0, 5).map(function(row) {
+      return '• ' + String(row.createdAt || '') + ' | ' + String(row.actor || '-') + ' | ' + String(row.action || '-') + ' | ' + String(row.resourceType || '-');
+    }).join('\n');
+    return {
+      response_type: 'ephemeral',
+      text: '*Audit results:* ' + String(audit.count) + (preview ? '\n' + preview : '\nNo matching records.')
+    };
+  }
+
+  offboardLearner(input) {
+    var params = input || {};
+    var learner = null;
+    if (params.learnerId) learner = this._db.table('learners').findById(params.learnerId);
+    if (!learner && params.slackUserId) {
+      learner = this._db.table('learners').findAll().filter(function(row) { return row.slackUserId === params.slackUserId; })[0] || null;
+    }
+    if (!learner && params.email) {
+      learner = this._db.table('learners').findAll().filter(function(row) {
+        return String(row.email || '').toLowerCase() === String(params.email || '').toLowerCase();
+      })[0] || null;
+    }
+    if (!learner) return { ok: false, code: 'LEARNER_NOT_FOUND', message: 'Learner not found for offboarding request.' };
+
+    this._db.table('learners').update(learner.id, { status: 'offboarded' });
+
+    var enrollmentRows = this._db.table('enrollment').findAll().filter(function(row) { return row.learnerId === learner.id; });
+    for (var i = 0; i < enrollmentRows.length; i++) {
+      this._db.table('enrollment').update(enrollmentRows[i].id, { status: 'inactive' });
+    }
+
+    var nowMs = Date.now();
+    var cancelled = 0;
+    var deliveryRows = this._db.table('delivery_queue').findAll().filter(function(row) {
+      var runAt = Date.parse(String(row.runAt || ''));
+      var isFuture = !isNaN(runAt) ? runAt > nowMs : true;
+      return row.learnerId === learner.id && row.status === 'queued' && isFuture;
+    });
+    for (var d = 0; d < deliveryRows.length; d++) {
+      this._db.table('delivery_queue').update(deliveryRows[d].id, { status: 'cancelled' });
+      cancelled++;
+    }
+
+    var retryRows = this._db.table('retry_queue').findAll().filter(function(row) {
+      if (row.status !== 'queued' && row.status !== 'pending') return false;
+      var nextRun = Date.parse(String(row.nextRunAt || ''));
+      var isFuture = !isNaN(nextRun) ? nextRun > nowMs : true;
+      if (!isFuture) return false;
+      var payloadText = String(row.payload || '');
+      return payloadText.indexOf(learner.id) !== -1;
+    });
+    for (var r = 0; r < retryRows.length; r++) {
+      this._db.table('retry_queue').update(retryRows[r].id, { status: 'cancelled', lastError: 'Cancelled due to learner offboarding.' });
+      cancelled++;
+    }
+
+    this._db.audit('offboard_learner', 'learners', {
+      requestorUserId: params.requestorUserId || 'system',
+      learnerId: learner.id,
+      email: learner.email || '',
+      source: params.source || 'manual',
+      cancelledQueueItems: cancelled
+    });
+
+    return {
+      ok: true,
+      code: 'LEARNER_OFFBOARDED',
+      learnerId: learner.id,
+      email: learner.email || '',
+      cancelledQueueItems: cancelled
+    };
+  }
+
+  _parseAuditFilterText(text) {
+    var out = {};
+    String(text || '').split(/\s+/).forEach(function(part) {
+      var bits = part.split('=');
+      if (bits.length < 2) return;
+      var key = String(bits[0] || '').toLowerCase();
+      var value = bits.slice(1).join('=');
+      if (key === 'from' || key === 'to') out[key] = value;
+      if (key === 'actor') out.actor = value;
+      if (key === 'resource' || key === 'resourcetype') out.resourceType = value;
+      if (key === 'resourceid') out.resourceId = value;
+    });
+    return out;
   }
 }
