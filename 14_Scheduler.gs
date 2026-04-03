@@ -60,7 +60,28 @@ function runDailyBackup() {
   var lock = LockService.getScriptLock();
   lock.waitLock(30000);
   try {
-    return createHostDependencies(ConfigBootstrap.load()).backupService.runDailyBackup();
+    var result = createHostDependencies(ConfigBootstrap.load()).backupService.runDailyBackup();
+    if (!result || result.ok !== true) {
+      return {
+        ok: false,
+        code: 'SCHEDULER_DAILY_BACKUP_FAILED',
+        failureCode: result && result.code ? result.code : 'BACKUP_UNKNOWN_FAILURE',
+        message: result && result.message ? result.message : 'Backup did not complete successfully'
+      };
+    }
+    return {
+      ok: true,
+      code: 'SCHEDULER_DAILY_BACKUP_SUCCESS',
+      backupCode: result.code,
+      artifactCount: result.artifactCount || 0
+    };
+  } catch (err) {
+    return {
+      ok: false,
+      code: 'SCHEDULER_DAILY_BACKUP_EXCEPTION',
+      failureCode: 'BACKUP_EXCEPTION',
+      message: String(err && err.message ? err.message : err)
+    };
   } finally {
     lock.releaseLock();
   }
