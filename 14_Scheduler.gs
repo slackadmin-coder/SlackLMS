@@ -17,7 +17,7 @@ function runDailyLessonDelivery() {
   var lock = LockService.getScriptLock();
   lock.waitLock(30000);
   try {
-    var deps = createHostDependencies(ConfigBootstrap.load());
+    var deps = createHostDependencies();
     return deps.lessonService.deliverPendingLessons();
   } finally {
     lock.releaseLock();
@@ -28,7 +28,7 @@ function runHourlyReminderCheck() {
   var lock = LockService.getScriptLock();
   lock.waitLock(30000);
   try {
-    var deps = createHostDependencies(ConfigBootstrap.load());
+    var deps = createHostDependencies();
     return deps.reminderService.sendOverdueReminders();
   } finally {
     lock.releaseLock();
@@ -39,7 +39,7 @@ function runWeeklyAdminReport() {
   var lock = LockService.getScriptLock();
   lock.waitLock(30000);
   try {
-    var deps = createHostDependencies(ConfigBootstrap.load());
+    var deps = createHostDependencies();
     return deps.reportService.buildWeeklySummary();
   } finally {
     lock.releaseLock();
@@ -50,7 +50,7 @@ function runHealthCheck() {
   var lock = LockService.getScriptLock();
   lock.waitLock(30000);
   try {
-    return createHostDependencies(ConfigBootstrap.load()).healthMonitor.getSnapshot();
+    return createHostDependencies().healthMonitor.getSnapshot();
   } finally {
     lock.releaseLock();
   }
@@ -60,7 +60,7 @@ function runDailyBackup() {
   var lock = LockService.getScriptLock();
   lock.waitLock(30000);
   try {
-    return createHostDependencies(ConfigBootstrap.load()).backupService.runDailyBackup();
+    return createHostDependencies().backupService.runDailyBackup();
   } finally {
     lock.releaseLock();
   }

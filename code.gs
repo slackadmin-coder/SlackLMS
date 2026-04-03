@@ -13,8 +13,8 @@ function doGet() {
 function doPost(e) {
   var correlationId = 'req_' + new Date().getTime() + '_' + Math.random().toString(36).slice(2, 8);
   try {
-    var config = getHostConfig_();
-    var deps = getHostDependencies_(config);
+    var config = resolveHostConfig();
+    var deps = createHostDependencies(config);
     var parsed = SlackPayloadParser.parse(e);
     var verified = SlackSecurity.verify(parsed, config);
 
@@ -50,15 +50,6 @@ function doPost(e) {
     return jsonResponse_(ErrorService.create('HOST_ERROR', 'Something went wrong in the Slack handler.', true, correlationId));
   }
 }
-
-function getHostConfig_() {
-  return ConfigBootstrap.load();
-}
-
-function getHostDependencies_(config) {
-  return createHostDependencies(config);
-}
-
 function textResponse_(text) {
   return ContentService.createTextOutput(String(text || '')).setMimeType(ContentService.MimeType.TEXT);
 }

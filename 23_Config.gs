@@ -1,5 +1,8 @@
 /**
- * Immutable runtime configuration for the Sheet DB client.
+ * Immutable configuration for the internal SheetDb client only.
+ *
+ * Note: host runtime/script properties configuration is owned by
+ * `16_ConfigBootstrap.gs`. This class is intentionally DB-scoped.
  */
 class Config {
   /**

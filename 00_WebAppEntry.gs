@@ -2,8 +2,24 @@
  * Host dependency wiring and DB client bootstrap.
  */
 
+function resolveHostConfig(config) {
+  var base = ConfigBootstrap.load();
+  if (!config) return base;
+
+  var merged = {};
+  Object.keys(base).forEach(function(key) {
+    if (Object.prototype.hasOwnProperty.call(config, key)) {
+      merged[key] = config[key];
+    } else {
+      merged[key] = base[key];
+    }
+  });
+
+  return merged;
+}
+
 function createHostDbClient(config) {
-  var cfg = config || ConfigBootstrap.load();
+  var cfg = resolveHostConfig(config);
   var db = SheetDb.createClient({ spreadsheetId: cfg.spreadsheetId });
   var schema = function(columns, fields) { return { columns: columns, fields: fields || {} }; };
 
@@ -39,7 +55,7 @@ function createHostRouter() {
 }
 
 function createHostDependencies(config) {
-  var cfg = config || ConfigBootstrap.load();
+  var cfg = resolveHostConfig(config);
   var db = createHostDbClient(cfg);
   var dbAdapter = new SheetsDBAdapter(db);
   var sheetsAudit = createSheetsAuditLogger(db);

@@ -4,7 +4,7 @@ function syncApprovedLessonsToRuntime() {
 }
 
 function upsertLessonRuntimeRecord(row) {
-  var db = createHostDbClient(ConfigBootstrap.load());
+  var db = createHostDbClient();
   var table = db.table('lessons');
   var source = row || {};
   var slackPayload = source.slackPayload || source.slack_payload || '';

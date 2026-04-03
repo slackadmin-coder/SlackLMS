@@ -1,1 +1,0 @@
-class LmsReportService extends ReportService {}
