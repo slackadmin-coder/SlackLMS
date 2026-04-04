@@ -335,10 +335,7 @@ function runSmokeTests() {
   return _runSuite('smoke', [
     function() {
       var db = createHostDbClient();
-      var requiredTables = [
-        'learners', 'enrollment', 'lessons', 'learner_progress',
-        'submission_log', 'delivery_queue', 'ingress_jobs', 'retry_queue', 'audit_log'
-      ];
+      var requiredTables = Object.keys(DbSchema.CONTRACT.TABLES);
       requiredTables.forEach(function(tableName) {
         var schema = db.schema(tableName);
         _assert(schema && Array.isArray(schema.columns) && schema.columns.length > 0, 'Missing or invalid schema: ' + tableName);
@@ -362,15 +359,18 @@ function runSecurityTests() {
         message: 'append-only verification',
         metadata: '{}'
       });
-      var mid = db.table('audit_log').findAll().length;
-      db.table('audit_log').remove(row.id);
-      var afterRows = db.table('audit_log').findAll().length;
+      var afterInsert = db.table('audit_log').findAll().length;
       var rawRows = db._sheets.readTable('audit_log').rows.length;
 
-      _assert(mid === before + 1, 'Audit log insert must append exactly one row.', { before: before, mid: mid });
-      _assert(afterRows === before, 'Soft-deleted audit rows must disappear from active reads.', { before: before, afterRows: afterRows });
-      _assert(rawRows >= mid, 'Underlying audit_log rows must remain append-only (no physical delete).', { rawRows: rawRows, expectedAtLeast: mid });
-      return { message: 'Audit log behavior is append-only at the storage layer.' };
+      _assert(afterInsert === before + 1, 'Audit log insert must append exactly one row.', { before: before, afterInsert: afterInsert });
+      _assert(rawRows >= afterInsert, 'Underlying audit_log rows must remain append-only.', { rawRows: rawRows, expectedAtLeast: afterInsert });
+      _assertAuditAppendOnlyViolation(function() {
+        db.table('audit_log').update(row.id, { status: 'warn' });
+      }, 'update');
+      _assertAuditAppendOnlyViolation(function() {
+        db.table('audit_log').remove(row.id);
+      }, 'remove');
+      return { message: 'Audit log is append-only (insert allowed, update/remove blocked).' };
     }
   ]);
 }
@@ -379,11 +379,52 @@ function runSchemaContractTests() {
   return _runSuite('schema_contract', [
     function() {
       var db = createHostDbClient();
-      var columns = db.schema('lessons').columns;
-      _assert(columns.length === 24, 'Lessons schema column count changed.', { expected: 24, actual: columns.length });
-      return { message: 'Lessons schema column count matches expected contract (24).' };
+      var contractTables = DbSchema.CONTRACT.TABLES;
+      var tableNames = Object.keys(contractTables);
+      _assert(tableNames.length === 13, 'Canonical table count changed.', { expected: 13, actual: tableNames.length });
+
+      tableNames.forEach(function(tableName) {
+        var actualColumns = db.schema(tableName).columns;
+        var expectedColumns = contractTables[tableName];
+        _assert(_sameColumns(actualColumns, expectedColumns), 'Schema mismatch for table: ' + tableName, {
+          expected: expectedColumns,
+          actual: actualColumns
+        });
+      });
+
+      var lessonColumns = db.schema('lessons').columns;
+      _assert(lessonColumns.length === 41, 'Lessons schema must remain at 41 columns.', {
+        expected: 41,
+        actual: lessonColumns.length
+      });
+      _assert(_sameColumns(lessonColumns, DbSchema.CONTRACT.LESSONS_COLUMNS), 'Lessons schema order mismatch against canonical contract.', {
+        expected: DbSchema.CONTRACT.LESSONS_COLUMNS,
+        actual: lessonColumns
+      });
+
+      return { message: 'Canonical schema contract validated for all 13 tables and 41-column lessons order.' };
     }
   ]);
+}
+
+function _sameColumns(actual, expected) {
+  if (!Array.isArray(actual) || !Array.isArray(expected)) return false;
+  if (actual.length !== expected.length) return false;
+  for (var i = 0; i < expected.length; i++) {
+    if (String(actual[i]) !== String(expected[i])) return false;
+  }
+  return true;
+}
+
+function _assertAuditAppendOnlyViolation(callback, operation) {
+  try {
+    callback();
+    throw new Error('Expected append-only violation for operation: ' + operation);
+  } catch (err) {
+    _assert(err && err.code === 'AUDIT_APPEND_ONLY_VIOLATION', 'Expected AUDIT_APPEND_ONLY_VIOLATION code for operation ' + operation + '.');
+    _assert(String(err.message || '').indexOf('Append-only violation') !== -1, 'Expected append-only violation message for operation ' + operation + '.');
+    return true;
+  }
 }
 
 function runStateMachineTests() {
