@@ -78,6 +78,75 @@ function hostTest_fakeMessageIm() {
   return doPost(_fakeSignedEvent('message', 'im')).getContent();
 }
 
+function hostTest_auditLogAppendOnly_insertAllowed() {
+  var deps = createHostDependencies();
+  var row = deps.db.table('audit_log').insert({
+    actor: 'test',
+    action: 'append_only_insert',
+    resourceType: 'test',
+    resourceId: 'insert',
+    status: 'info',
+    message: 'insert should succeed',
+    metadata: '{}'
+  });
+  Util.assert(!!row && !!row.id, 'Expected audit_log insert to succeed.');
+  return JSON.stringify({ ok: true, id: row.id });
+}
+
+function hostTest_auditLogAppendOnly_updateViolation() {
+  var deps = createHostDependencies();
+  var inserted = deps.db.table('audit_log').insert({
+    actor: 'test',
+    action: 'append_only_update_attempt',
+    resourceType: 'test',
+    resourceId: 'update',
+    status: 'info',
+    message: 'update should be blocked',
+    metadata: '{}'
+  });
+  return _assertAuditLogViolation(function() {
+    deps.db.table('audit_log').update(inserted.id, { status: 'warn' });
+  }, 'update');
+}
+
+function hostTest_auditLogAppendOnly_removeViolation() {
+  var deps = createHostDependencies();
+  var inserted = deps.db.table('audit_log').insert({
+    actor: 'test',
+    action: 'append_only_remove_attempt',
+    resourceType: 'test',
+    resourceId: 'remove',
+    status: 'info',
+    message: 'remove should be blocked',
+    metadata: '{}'
+  });
+  return _assertAuditLogViolation(function() {
+    deps.db.table('audit_log').remove(inserted.id);
+  }, 'remove');
+}
+
+function _assertAuditLogViolation(callback, operation) {
+  try {
+    callback();
+    throw new Error('Expected append-only violation for operation: ' + operation);
+  } catch (err) {
+    Util.assert(
+      err && err.code === 'AUDIT_APPEND_ONLY_VIOLATION',
+      'Expected AUDIT_APPEND_ONLY_VIOLATION code for operation ' + operation + '.'
+    );
+    Util.assert(
+      String(err.message || '').indexOf('Append-only violation') !== -1,
+      'Expected append-only violation message for operation ' + operation + '.'
+    );
+    return JSON.stringify({
+      ok: true,
+      operation: operation,
+      code: err.code,
+      message: err.message
+    });
+  }
+}
+
 function _fakeSignedSlash(command, text) {
   var body = 'command=' + encodeURIComponent(command) + '&text=' + encodeURIComponent(text || '') + '&user_id=U123&channel_id=C123&team_id=T123';
   return _fakeSignedForm(body, { command: command, text: text || '', user_id: 'U123', channel_id: 'C123', team_id: 'T123' });
