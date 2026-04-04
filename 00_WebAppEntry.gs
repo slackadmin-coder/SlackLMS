@@ -22,7 +22,7 @@ function createHostDbClient(config) {
   var cfg = resolveHostConfig(config);
   var db = SheetDb.createClient({ spreadsheetId: cfg.spreadsheetId });
   var schema = function(columns, fields) { return { columns: columns, fields: fields || {} }; };
-  var requiredTables = DbSchema.WAVE1.REQUIRED_TABLES;
+  var requiredTables = DbSchema.CONTRACT.TABLES;
 
   Object.keys(requiredTables).forEach(function(tableName) {
     db.schema(tableName, schema(requiredTables[tableName]));

@@ -113,7 +113,7 @@ class SchemaRegistry {
   enforceWave1ManagedTables(sheetsGateway, auditLogger) {
     var gateway = sheetsGateway;
     var logger = auditLogger || new AuditLogger({ sink: function() {} });
-    var requiredTables = DbSchema.WAVE1.REQUIRED_TABLES;
+    var requiredTables = DbSchema.CONTRACT.TABLES;
     var tableNames = Object.keys(requiredTables);
     var summary = { ok: true, created: 0, migrated: 0, validated: 0, steps: [] };
 
