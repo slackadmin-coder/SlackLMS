@@ -31,6 +31,24 @@ function hostTest_requestPathDoesNotMutate_inlineSlashLearn() {
   return JSON.stringify({ ok: true, response: response });
 }
 
+function hostTest_requestPathDoesNotMutate_inlineSlashSubmit() {
+  var spies = _buildIngressRequestPathSpies_();
+  var service = spies.service;
+  var response = service.handleSlashCommand({
+    command: '/submit',
+    userId: 'U123',
+    params: { text: 'PRE-M01 complete' },
+    routeType: 'slash_command',
+    teamId: 'T123',
+    channelId: 'C123',
+    rawBody: 'command=/submit&text=PRE-M01+complete'
+  }, { correlationId: 'req_test_1b' });
+
+  Util.assert(spies.completionCalls === 0, 'Completion mutator must not run inline for /submit.');
+  Util.assert(spies.queueCalls === 1, 'Ingress queue append should run once for /submit.');
+  return JSON.stringify({ ok: true, response: response });
+}
+
 function hostTest_requestPathDoesNotMutate_inlineInteractivitySubmit() {
   var spies = _buildIngressRequestPathSpies_();
   var service = spies.service;
@@ -360,6 +378,11 @@ function runRequestPathContractTests() {
       var result = JSON.parse(hostTest_requestPathDoesNotMutate_inlineSlashLearn());
       _assert(result.ok, 'Slash /learn queue-only contract should hold.');
       return { message: 'Slash /learn does not call mutators inline.' };
+    },
+    function inlineSlashSubmitQueuesOnly() {
+      var result = JSON.parse(hostTest_requestPathDoesNotMutate_inlineSlashSubmit());
+      _assert(result.ok, 'Slash /submit queue-only contract should hold.');
+      return { message: 'Slash /submit does not call mutators inline.' };
     },
     function inlineInteractivityQueuesOnly() {
       var result = JSON.parse(hostTest_requestPathDoesNotMutate_inlineInteractivitySubmit());
