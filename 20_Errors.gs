@@ -72,3 +72,15 @@ class TransactionError extends SheetDbError {
     super(message, 'TRANSACTION_ERROR');
   }
 }
+
+/**
+ * Raised when a write attempts to mutate an append-only audit table.
+ */
+class AuditAppendOnlyViolationError extends SheetDbError {
+  /**
+   * @param {string} message
+   */
+  constructor(message) {
+    super(message, 'AUDIT_APPEND_ONLY_VIOLATION');
+  }
+}

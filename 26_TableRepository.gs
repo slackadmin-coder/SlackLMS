@@ -48,6 +48,7 @@ class TableRepository {
    * @return {Object}
    */
   insert(payload) {
+    enforceAuditAppendOnly('insert', this._tableName);
     var schema = this._schemas.get(this._tableName);
     this._sheets.ensureTable(this._tableName, schema.columns);
     var record = this._schemas.normalizeRecord(this._tableName, payload, false);
@@ -81,6 +82,7 @@ class TableRepository {
    * @return {Object}
    */
   update(id, patch) {
+    enforceAuditAppendOnly('update', this._tableName);
     var schema = this._schemas.get(this._tableName);
     var normalizedPatch = this._schemas.normalizeRecord(this._tableName, patch, true);
     var tableData = this._sheets.readTable(this._tableName);
@@ -116,6 +118,7 @@ class TableRepository {
    * @return {Object}
    */
   remove(id) {
+    enforceAuditAppendOnly('remove', this._tableName);
     var result = this.update(id, (function(col, now) {
       var patch = {};
       patch[col] = now;

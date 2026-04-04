@@ -84,3 +84,18 @@ class Util {
     });
   }
 }
+
+/**
+ * Enforces append-only writes for the audit log table.
+ * @param {string} operation
+ * @param {string} tableName
+ */
+function enforceAuditAppendOnly(operation, tableName) {
+  var op = String(operation || '').toLowerCase();
+  var table = String(tableName || '').toLowerCase();
+  if (table === 'audit_log' && op !== 'insert') {
+    throw new AuditAppendOnlyViolationError(
+      'Append-only violation: operation "' + op + '" is not allowed on table "' + table + '".'
+    );
+  }
+}
