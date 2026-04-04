@@ -236,6 +236,35 @@ The runtime data store is Google Sheets accessed through the shared `SheetDb` / 
 - Reused: DB client creation, health checks, script property helpers, table CRUD, transaction/audit utilities.
 - Local wrappers: host-specific dependency graph, Slack domain service contracts.
 
+## 6.1 Canonical Module Ownership (`00`–`21`)
+
+Canonical ownership is contractually defined in `docs/scaffold_traceability.md` and normalized as follows:
+
+| Canonical Module | Owning File |
+|---|---|
+| 00 | `00_WebAppEntry.gs` |
+| 01 | `01_SlackRouter.gs` |
+| 02 | `02_SlackPayloadParser.gs` |
+| 03 | `03_SlackService.gs` |
+| 04 | `04_SlackSecurity.gs` |
+| 05 | `05_AppSheetWebhook.gs` |
+| 06 | `14_Scheduler.gs` |
+| 07 | `07_AuditLogger_Sheets.gs` |
+| 08 | `12_SlackBlockKitBuilder.gs` |
+| 09 | `09_LmsEnrollmentService.gs` |
+| 10 | `16_ConfigBootstrap.gs` |
+| 11 | `19_HostTestHarness.gs` |
+| 12 | `08_DbSchema.gs` |
+| 13 | `13_LearnerProgressStateMachine.gs` |
+| 14 | `12_LmsLessonService.gs` |
+| 15 | `13_LmsProgressService.gs` |
+| 16 | `13a_LmsCompletionService.gs` |
+| 17 | `14_LmsReminderService.gs` |
+| 18 | `17_HealthMonitor.gs` |
+| 19 | `18_RetryResolver.gs` |
+| 20 | `20_Errors.gs` |
+| 21 | `21_Util.gs` |
+
 ## 7. Security Model
 - **Primary verification:** Slack signing secret via HMAC-SHA256 over `v0:timestamp:rawBody`.
 - **Replay protection:** timestamp skew rejection (>5 minutes).

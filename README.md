@@ -38,6 +38,32 @@ Key principle: keep ingress thin and move behavior into modular services.
 - `sheet_db_lib/` — shared library (DB/config/audit helpers).
 - `md_mirror/`, `pdf_mirror/` — mirrored reference docs.
 
+### Canonical Module Ownership (`00`–`21`)
+The canonical module contract is maintained in `docs/scaffold_traceability.md`:
+
+- `00` `00_WebAppEntry.gs` — host entry wiring.
+- `01` `01_SlackRouter.gs` — route dispatch.
+- `02` `02_SlackPayloadParser.gs` — payload normalization.
+- `03` `03_SlackService.gs` — slash/event/interactivity dispatch.
+- `04` `04_SlackSecurity.gs` — request verification.
+- `05` `05_AppSheetWebhook.gs` — workflow webhook bridge.
+- `06` `14_Scheduler.gs` — automation orchestration jobs.
+- `07` `07_AuditLogger_Sheets.gs` — audit sink wiring.
+- `08` `12_SlackBlockKitBuilder.gs` — response/block formatting.
+- `09` `09_LmsEnrollmentService.gs` — enrollment + onboarding.
+- `10` `16_ConfigBootstrap.gs` — runtime/script configuration.
+- `11` `19_HostTestHarness.gs` — host harness entrypoints.
+- `12` `08_DbSchema.gs` — runtime schema contract.
+- `13` `13_LearnerProgressStateMachine.gs` — state transition policy.
+- `14` `12_LmsLessonService.gs` — lesson delivery domain logic.
+- `15` `13_LmsProgressService.gs` — progress summary logic.
+- `16` `13a_LmsCompletionService.gs` — submission/completion logic.
+- `17` `14_LmsReminderService.gs` — reminder workflow logic.
+- `18` `17_HealthMonitor.gs` — health checks and telemetry snapshots.
+- `19` `18_RetryResolver.gs` — retry queue processing.
+- `20` `20_Errors.gs` — error taxonomy.
+- `21` `21_Util.gs` — shared utility helpers.
+
 ## 5. Workflows
 Supported runtime workflows:
 - onboarding/enrollment scaffold
