@@ -23,6 +23,17 @@ function runDailyLessonDelivery() {
   }
 }
 
+function runIngressJobProcessor() {
+  var lock = LockService.getScriptLock();
+  lock.waitLock(30000);
+  try {
+    var deps = createHostDependencies();
+    return deps.queueProcessor.processIngressJobs();
+  } finally {
+    lock.releaseLock();
+  }
+}
+
 function runQueuedLessonDeliveryProcessor() {
   var deps = createHostDependencies();
   var now = new Date();

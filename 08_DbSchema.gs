@@ -5,6 +5,7 @@ var DbSchema = {
   LEARNER_PROGRESS:      { TABLE: 'learner_progress',      PK: 'id' },
   SUBMISSION_LOG:        { TABLE: 'submission_log',        PK: 'id' },
   DELIVERY_QUEUE:        { TABLE: 'delivery_queue',        PK: 'id' },
+  INGRESS_JOBS:          { TABLE: 'ingress_jobs',          PK: 'id' },
   RETRY_QUEUE:           { TABLE: 'retry_queue',           PK: 'id' },
   AUDIT_LOG:             { TABLE: 'audit_log',             PK: 'id' },
   COURSES:               { TABLE: 'courses',               PK: 'id' },
@@ -43,6 +44,7 @@ DbSchema.WAVE1.REQUIRED_TABLES = (function() {
   tableDefs[DbSchema.LEARNER_PROGRESS.TABLE] = DbSchema.WAVE1.LEARNER_PROGRESS_COLUMNS.slice();
   tableDefs[DbSchema.SUBMISSION_LOG.TABLE] = ['id', 'learnerId', 'lessonId', 'submitKey', 'payload', 'createdAt', 'updatedAt', 'deletedAt'];
   tableDefs[DbSchema.DELIVERY_QUEUE.TABLE] = DbSchema.WAVE1.DELIVERY_QUEUE_COLUMNS.slice();
+  tableDefs[DbSchema.INGRESS_JOBS.TABLE] = ['id', 'routeType', 'jobType', 'idempotencyKey', 'status', 'payload', 'requestMeta', 'attempts', 'availableAt', 'lastError', 'processedAt', 'createdAt', 'updatedAt', 'deletedAt'];
   tableDefs[DbSchema.RETRY_QUEUE.TABLE] = ['id', 'jobType', 'payload', 'attempts', 'nextRunAt', 'status', 'lastError', 'correlationId', 'createdAt', 'updatedAt', 'deletedAt'];
   tableDefs[DbSchema.AUDIT_LOG.TABLE] = DbSchema.WAVE1.AUDIT_LOG_COLUMNS.slice();
   tableDefs[DbSchema.COURSES.TABLE] = ['id', 'courseTitle', 'brandScope', 'moduleOrder', 'durationMonths', 'status', 'createdAt', 'updatedAt', 'deletedAt'];
