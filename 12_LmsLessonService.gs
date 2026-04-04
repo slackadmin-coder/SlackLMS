@@ -26,6 +26,7 @@ class LmsLessonService {
   }
 
   queueNextEligibleLessonForLearner(slackUserId) {
+    var skillId = SkillRegistry.workflowActionSkills.delivery; // skill-trace: SKILL-DELIVERY-001
     var learner = this._repos.learnerRepo.findBySlackUserId(slackUserId);
     if (!learner) return { ok: false, code: 'LEARNER_NOT_FOUND', message: 'Learner not found.' };
 
@@ -71,7 +72,8 @@ class LmsLessonService {
       queueId: queueRow.id,
       progressId: progressId,
       dedupedCount: dedupedCount,
-      source: '/learn'
+      source: '/learn',
+      skillId: skillId
     });
 
     return {
@@ -167,6 +169,7 @@ class LmsLessonService {
 
   deliverLessonToLearner(learnerId, lessonId) {
     var self = this;
+    var skillId = SkillRegistry.workflowActionSkills.delivery; // skill-trace: SKILL-DELIVERY-001
     return this._workflow.run('lesson_delivery', { learnerId: learnerId, lessonId: lessonId }, {
       validate: function(ctx) {
         ctx.data.learner = self._repos.learnerRepo.findById(ctx.trigger.learnerId);
@@ -191,10 +194,10 @@ class LmsLessonService {
         }
       },
       respond: function(ctx) {
-        ctx.result = { ok: true, code: 'DELIVERED', learnerId: learnerId, lessonId: lessonId, correlationId: ctx.correlationId };
+        ctx.result = { ok: true, code: 'DELIVERED', skillId: skillId, learnerId: learnerId, lessonId: lessonId, correlationId: ctx.correlationId };
       },
       audit: function(ctx) {
-        self._db.audit('lesson_delivered', 'delivery_queue', { learnerId: learnerId, lessonId: lessonId, correlationId: ctx.correlationId });
+        self._db.audit('lesson_delivered', 'delivery_queue', { learnerId: learnerId, lessonId: lessonId, correlationId: ctx.correlationId, skillId: skillId });
       }
     });
   }

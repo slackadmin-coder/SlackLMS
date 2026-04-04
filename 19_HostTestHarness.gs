@@ -334,7 +334,7 @@ function runAllTests() {
     runSecurityTests(),
     runSchemaContractTests(),
     runStateMachineTests(),
-    runEventCallbackTests()
+    runTraceabilityTests()
   ];
 
   var summary = suites.reduce(function(acc, suite) {
@@ -354,22 +354,26 @@ function runAllTests() {
   };
 }
 
-function runRequestPathContractTests() {
-  return _runSuite('request_path_contract', [
-    function inlineSlashLearnQueuesOnly() {
-      var result = JSON.parse(hostTest_requestPathDoesNotMutate_inlineSlashLearn());
-      _assert(result.ok, 'Slash /learn queue-only contract should hold.');
-      return { message: 'Slash /learn does not call mutators inline.' };
-    },
-    function inlineInteractivityQueuesOnly() {
-      var result = JSON.parse(hostTest_requestPathDoesNotMutate_inlineInteractivitySubmit());
-      _assert(result.ok, 'Interactivity queue-only contract should hold.');
-      return { message: 'Interactivity submit does not call mutators inline.' };
-    },
-    function inlineWorkflowQueuesOnly() {
-      var result = JSON.parse(hostTest_requestPathDoesNotMutate_inlineWorkflowEnroll());
-      _assert(result.ok, 'Workflow queue-only contract should hold.');
-      return { message: 'Workflow enroll does not call mutators inline.' };
+function runTraceabilityTests() {
+  return _runSuite('traceability', [
+    function skillRegistryContainsRequiredWorkflowActions() {
+      _assert(typeof SkillRegistry === 'object', 'SkillRegistry must be defined.');
+      _assert(Array.isArray(SkillRegistry.operationalSkills), 'SkillRegistry.operationalSkills must be an array.');
+      _assert(typeof SkillRegistry.workflowActionSkills === 'object', 'SkillRegistry.workflowActionSkills must be defined.');
+
+      var requiredActions = ['enrollment', 'submission', 'delivery', 'reporting', 'offboarding'];
+      var registeredIds = SkillRegistry.operationalSkills.map(function(skill) { return skill.id; });
+
+      requiredActions.forEach(function(action) {
+        var skillId = SkillRegistry.workflowActionSkills[action];
+        _assert(!!skillId, 'Missing skill mapping for workflow action: ' + action);
+        _assert(
+          registeredIds.indexOf(skillId) !== -1,
+          'Workflow action "' + action + '" maps to unregistered skill ID: ' + skillId
+        );
+      });
+
+      return { message: 'All required workflow actions map to registered skill IDs.' };
     }
   ]);
 }

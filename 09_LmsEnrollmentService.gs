@@ -12,6 +12,7 @@ class LmsEnrollmentService {
 
   enrollLearner(input) {
     var self = this;
+    var skillId = SkillRegistry.workflowActionSkills.enrollment; // skill-trace: SKILL-ENROLLMENT-001
     return this._workflow.run('enrollment', input || {}, {
       validate: function(ctx) {
         var slackUserId = self._security.sanitizeInput(ctx.trigger.slackUserId);
@@ -47,6 +48,7 @@ class LmsEnrollmentService {
         ctx.result = {
           ok: true,
           code: 'ENROLLED',
+          skillId: skillId,
           learnerId: ctx.data.learner.id,
           enrollmentId: ctx.data.enrollment.id,
           queueId: ctx.data.queue.queueId || '',
@@ -54,7 +56,7 @@ class LmsEnrollmentService {
         };
       },
       audit: function(ctx) {
-        self._db.audit('enroll_learner', 'enrollment', { learnerId: ctx.data.learner.id, enrollmentId: ctx.data.enrollment.id, correlationId: ctx.correlationId });
+        self._db.audit('enroll_learner', 'enrollment', { learnerId: ctx.data.learner.id, enrollmentId: ctx.data.enrollment.id, correlationId: ctx.correlationId, skillId: skillId });
       }
     });
   }
