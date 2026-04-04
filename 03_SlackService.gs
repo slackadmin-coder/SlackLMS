@@ -9,81 +9,102 @@ class SlackService {
     this._enrollment = services.enrollmentService;
     this._report = services.reportService;
     this._onboarding = services.onboardingService;
+    this._ingressQueue = services.ingressQueueService;
     this._blocks = blocks;
     this._config = config || {};
     this._security = securityService || SecurityService;
     this._configRepo = configRepo;
     this._slashRegistry = {
-      '/learn': this._lesson.handleLesson.bind(this._lesson),
-      '/submit': this._completion.handleSubmit.bind(this._completion),
+      '/learn': this._queueSlashLearn.bind(this),
+      '/submit': this._queueSlashSubmit.bind(this),
       '/progress': this._progress.handleProgress.bind(this._progress),
       '/help': this._handleHelp.bind(this),
-      '/enroll': this._handleEnroll.bind(this),
+      '/enroll': this._queueSlashEnroll.bind(this),
       '/report': this._handleReport.bind(this),
       '/onboard': this._handleOnboard.bind(this),
       '/gaps': this._handleGaps.bind(this),
       '/audit': this._handleAudit.bind(this),
-      '/mix': this._handleMix.bind(this),
+      '/mix': this._queueSlashMix.bind(this),
       '/reinforce': this._handleReinforce.bind(this),
       '/offboard': this._handleOffboard.bind(this)
     };
   }
 
-  handleSlashCommand(parsed) {
+  handleSlashCommand(parsed, requestContext) {
     if (!parsed || !parsed.command) {
       return { response_type: 'ephemeral', text: 'Missing slash command context.' };
     }
     var handler = this._slashRegistry[parsed.command];
     if (!handler) return { response_type: 'ephemeral', text: 'Unsupported command: ' + parsed.command };
-    return handler(parsed);
+    return handler(parsed, requestContext || {});
   }
 
-  handleInteractivity(parsed) {
+  handleInteractivity(parsed, requestContext) {
     var payload = parsed.interaction || {};
     var action = (payload.actions && payload.actions[0]) || {};
     var actionId = action.action_id || '';
     var type = payload.type || '';
 
     if (type === 'view_submission') {
-      return this._handleModalSubmission(payload);
+      var modalPayload = {
+        slackUserId: payload.user && payload.user.id,
+        lessonId: this._extractModalValue((payload.view && payload.view.state && payload.view.state.values) || {}, 'lesson', 'lesson_id'),
+        payload: JSON.stringify({
+          notes: this._extractModalValue((payload.view && payload.view.state && payload.view.state.values) || {}, 'notes', 'notes_value'),
+          source: 'modal_submission'
+        })
+      };
+      var modalQueued = this._enqueueIngressJob('interactivity', 'interactivity.modal_submission', modalPayload, parsed, requestContext || {});
+      if (!modalQueued.ok) return { response_action: 'errors', errors: { lesson: modalQueued.message || 'Unable to queue submission.' } };
+      return { response_action: 'clear' };
     }
 
     if (actionId.indexOf('checklist_mark_') === 0) {
-      var checklistItemId = actionId.replace('checklist_mark_', '');
-      var learnerId = payload.user && payload.user.id;
-      var status = (action.value || 'completed');
-      var advanced = this._onboarding.advanceOnboardingState(learnerId, checklistItemId, status);
-      return { response_type: 'ephemeral', text: advanced.ok ? ':white_check_mark: Checklist updated.' : (advanced.message || 'Checklist update failed.') };
+      var checklistQueued = this._enqueueIngressJob('interactivity', 'interactivity.checklist_mark', {
+        learnerId: payload.user && payload.user.id,
+        checklistItemId: actionId.replace('checklist_mark_', ''),
+        status: action.value || 'completed'
+      }, parsed, requestContext || {});
+      return {
+        response_type: 'ephemeral',
+        text: checklistQueued.ok ? ':hourglass_flowing_sand: Checklist update queued.' : (checklistQueued.message || 'Checklist update failed.')
+      };
     }
 
     if (actionId === 'submit_lesson') {
-      var lessonId = this._security.sanitizeInput(action.value || '');
-      var submit = this._completion.recordSubmission({
+      var submit = this._enqueueIngressJob('interactivity', 'interactivity.submit_lesson', {
         slackUserId: parsed.userId,
-        lessonId: lessonId,
+        lessonId: this._security.sanitizeInput(action.value || ''),
         payload: JSON.stringify(payload)
-      });
-      return { response_type: 'ephemeral', text: submit.ok ? ':white_check_mark: Lesson submitted.' : (submit.message || submit.error_code) };
+      }, parsed, requestContext || {});
+      return { response_type: 'ephemeral', text: submit.ok ? ':hourglass_flowing_sand: Submission queued.' : (submit.message || submit.error_code) };
     }
 
     return { response_type: 'ephemeral', text: 'Action received. Use /help to see supported actions.' };
   }
 
-  handleEventCallback(parsed) {
+  handleEventCallback(parsed, requestContext) {
     var event = (parsed.body && parsed.body.event) ? parsed.body.event : {};
     if (event.type === 'app_mention') {
-      return {
-        ok: true,
-        text: 'Hi! Commands: `/learn`, `/submit <lesson_id> complete`, `/progress`, `/help`, `/enroll [courseId]`, `/report`, `/onboard [email]`, `/gaps`, `/audit`, `/mix`, `/reinforce`, `/offboard [email]`.'
-      };
+      this._enqueueIngressJob('event_callback', 'event.app_mention', {
+        userId: event.user || parsed.userId,
+        channelId: event.channel || parsed.channelId,
+        text: event.text || ''
+      }, parsed, requestContext || {});
+      return { ok: true, text: 'Event queued' };
     }
     if (event.type === 'message' && event.channel_type === 'im') {
-      return this._handleDm(event);
+      this._enqueueIngressJob('event_callback', 'event.message_im', {
+        userId: event.user || parsed.userId,
+        channelId: event.channel || parsed.channelId,
+        text: event.text || ''
+      }, parsed, requestContext || {});
+      return { ok: true, text: 'Event queued' };
     }
     return { ok: true, text: 'Event ignored', eventType: event.type || '' };
   }
 
-  handleWorkflowWebhook(parsed) {
+  handleWorkflowWebhook(parsed, requestContext) {
     var data = (parsed.body && parsed.body.data) || {};
     var slackUserId = this._security.sanitizeInput(data.user_id || parsed.params.user_id || '');
     var email = this._security.sanitizeInput(data.email || parsed.params.email || '');
@@ -94,23 +115,28 @@ class SlackService {
       return ErrorService.create('INVALID_WORKFLOW_PAYLOAD', 'Missing user_id in workflow payload', false);
     }
 
-    return this._enrollment.enrollLearner({
+    var queued = this._enqueueIngressJob('workflow_webhook', 'workflow.enroll', {
       slackUserId: slackUserId,
       email: email,
       name: name,
       courseId: courseId
-    });
+    }, parsed, requestContext || {});
+    if (!queued.ok) return queued;
+    return { ok: true, code: 'WORKFLOW_ENROLL_QUEUED', jobId: queued.jobId };
   }
 
   _handleHelp() {
     return { response_type: 'ephemeral', text: 'Commands: /learn, /submit <lesson_id> complete, /progress, /help, /enroll [courseId], /report, /onboard [email], /gaps, /audit, /mix, /reinforce, /offboard [email]' };
   }
 
-  _handleEnroll(parsed) {
-    return this._enrollment.enrollLearner({
+  _queueSlashEnroll(parsed, requestContext) {
+    var queued = this._enqueueIngressJob('slash_command', 'slash.enroll', {
       slackUserId: parsed.userId,
       courseId: this._security.sanitizeInput(parsed.params.text || '') || this._config.defaultCourseId
-    });
+    }, parsed, requestContext || {});
+    return queued.ok
+      ? { response_type: 'ephemeral', text: 'Enrollment request queued. You will get a DM shortly.', job_id: queued.jobId }
+      : { response_type: 'ephemeral', text: queued.message || queued.error_code || 'Unable to queue enrollment.' };
   }
 
   _handleOnboard(parsed) {
@@ -152,8 +178,8 @@ class SlackService {
     return this._onboarding.handleAuditQuery(parsed);
   }
 
-  _handleMix(parsed) {
-    return this._lesson.handleMix(parsed);
+  _queueSlashMix(parsed, requestContext) {
+    return this._queueSlashLearn(parsed, requestContext, 'slash.mix');
   }
 
   _handleReinforce(parsed) {
@@ -172,37 +198,55 @@ class SlackService {
     return { response_type: 'ephemeral', text: ':lock: ' + commandName + ' is restricted to admins.' };
   }
 
-  _handleDm(event) {
-    var text = String(event.text || '').toLowerCase();
-    if (text.indexOf('progress') !== -1) {
-      return { ok: true, text: 'Use `/progress` for your learner snapshot.' };
-    }
-    if (text.indexOf('help') !== -1) {
-      return { ok: true, text: 'Need help? Try `/help` for all commands.' };
-    }
-    return { ok: true, text: 'Welcome! Use `/learn` to get your current lesson, or `/help` for all commands.' };
+  _queueSlashLearn(parsed, requestContext, jobTypeOverride) {
+    var queued = this._enqueueIngressJob('slash_command', jobTypeOverride || 'slash.learn', { userId: parsed.userId }, parsed, requestContext || {});
+    return queued.ok
+      ? { response_type: 'ephemeral', text: 'Queued your next lesson for delivery. You will receive it in DM shortly.', job_id: queued.jobId }
+      : { response_type: 'ephemeral', text: queued.message || queued.error_code || 'Unable to queue lesson right now.' };
   }
 
-  _handleModalSubmission(payload) {
-    var values = (payload.view && payload.view.state && payload.view.state.values) || {};
-    var lessonValue = this._extractModalValue(values, 'lesson', 'lesson_id');
-    var notesValue = this._extractModalValue(values, 'notes', 'notes_value');
-    var learnerId = payload.user && payload.user.id;
-
-    var persisted = this._completion.recordSubmission({
-      slackUserId: learnerId,
-      lessonId: lessonValue,
-      payload: JSON.stringify({ notes: notesValue, source: 'modal_submission' })
-    });
-
-    if (!persisted.ok) {
-      return {
-        response_action: 'errors',
-        errors: { lesson: persisted.message || 'Unable to submit lesson.' }
-      };
+  _queueSlashSubmit(parsed, requestContext) {
+    var parts = String((parsed.params && parsed.params.text) || '').trim().split(/\s+/);
+    var lessonId = this._security.sanitizeInput(parts[0] || '');
+    var keyword = (parts[1] || '').toLowerCase();
+    if (keyword !== 'complete' || !lessonId) {
+      return { response_type: 'ephemeral', text: 'Usage: /submit <lesson_id> complete' };
     }
 
-    return { response_action: 'clear' };
+    var queued = this._enqueueIngressJob('slash_command', 'slash.submit', {
+      slackUserId: parsed.userId,
+      lessonId: lessonId,
+      payload: parsed.rawBody
+    }, parsed, requestContext || {});
+
+    return queued.ok
+      ? { response_type: 'ephemeral', text: 'Submission queued for ' + lessonId + '.', job_id: queued.jobId }
+      : { response_type: 'ephemeral', text: queued.message || queued.error_code || 'Unable to queue submission.' };
+  }
+
+  _enqueueIngressJob(routeType, jobType, payload, parsed, requestContext) {
+    if (!this._ingressQueue) {
+      return ErrorService.create('INGRESS_QUEUE_UNAVAILABLE', 'Ingress queue service is unavailable.', true, (requestContext && requestContext.correlationId) || '');
+    }
+    var idempotencyKey = this._ingressQueue.generateIdempotencyKey(routeType, jobType, {
+      payload: payload,
+      teamId: parsed.teamId,
+      channelId: parsed.channelId,
+      userId: parsed.userId
+    });
+    var append = this._ingressQueue.appendJob({
+      routeType: routeType,
+      jobType: jobType,
+      idempotencyKey: idempotencyKey,
+      payload: payload,
+      requestMeta: {
+        correlationId: (requestContext && requestContext.correlationId) || '',
+        teamId: parsed.teamId || '',
+        userId: parsed.userId || '',
+        command: parsed.command || ''
+      }
+    });
+    return append;
   }
 
   _extractModalValue(values, blockId, actionId) {

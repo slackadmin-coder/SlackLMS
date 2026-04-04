@@ -27,7 +27,7 @@ function doPost(e) {
       return jsonResponse_(verified);
     }
 
-    var routed = SlackRouter.route(parsed, deps);
+    var routed = SlackRouter.route(parsed, deps, { correlationId: correlationId });
     deps.audit('request_routed', {
       correlationId: correlationId,
       routeType: parsed.routeType,
