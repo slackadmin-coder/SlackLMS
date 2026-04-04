@@ -10,7 +10,7 @@ var SlackRouter = {
     workflow_webhook: 'handleWorkflowWebhook'
   },
 
-  route: function(parsed, deps) {
+  route: function(parsed, deps, requestContext) {
     if (!parsed || !parsed.ok) {
       return { ok: false, code: 'PARSE_FAILED', response: ErrorService.create('PARSE_FAILED', 'invalid_request', false) };
     }
@@ -28,6 +28,6 @@ var SlackRouter = {
       };
     }
 
-    return { ok: true, code: parsed.routeType.toUpperCase(), response: deps.slackService[handlerName](parsed) };
+    return { ok: true, code: parsed.routeType.toUpperCase(), response: deps.slackService[handlerName](parsed, requestContext || {}) };
   }
 };

@@ -2,6 +2,79 @@ function hostTest_fakeSlashLearn() {
   return doPost(_fakeSignedSlash('/learn', '')).getContent();
 }
 
+function hostTest_createHostDependencies_wiresIngressQueue() {
+  var deps = createHostDependencies();
+  Util.assert(!!deps.ingressQueueService, 'Expected ingressQueueService from createHostDependencies().');
+  Util.assert(!!deps.slackService._ingressQueue, 'Expected SlackService ingress queue to be wired.');
+  Util.assert(
+    deps.slackService._ingressQueue === deps.ingressQueueService,
+    'Expected SlackService ingress queue to reference deps.ingressQueueService.'
+  );
+  return JSON.stringify({ ok: true });
+}
+
+function hostTest_requestPathDoesNotMutate_inlineSlashLearn() {
+  var spies = _buildIngressRequestPathSpies_();
+  var service = spies.service;
+  var response = service.handleSlashCommand({
+    command: '/learn',
+    userId: 'U123',
+    params: { text: '' },
+    routeType: 'slash_command',
+    teamId: 'T123',
+    channelId: 'C123',
+    rawBody: 'command=/learn'
+  }, { correlationId: 'req_test_1' });
+
+  Util.assert(spies.lessonCalls === 0, 'Lesson mutator must not run inline for /learn.');
+  Util.assert(spies.queueCalls === 1, 'Ingress queue append should run once for /learn.');
+  return JSON.stringify({ ok: true, response: response });
+}
+
+function hostTest_requestPathDoesNotMutate_inlineInteractivitySubmit() {
+  var spies = _buildIngressRequestPathSpies_();
+  var service = spies.service;
+  var response = service.handleInteractivity({
+    routeType: 'interactivity',
+    userId: 'U123',
+    teamId: 'T123',
+    channelId: 'C123',
+    interaction: {
+      type: 'block_actions',
+      user: { id: 'U123' },
+      actions: [{ action_id: 'submit_lesson', value: 'PRE-M01' }]
+    }
+  }, { correlationId: 'req_test_2' });
+
+  Util.assert(spies.completionCalls === 0, 'Completion mutator must not run inline for interactivity submit.');
+  Util.assert(spies.queueCalls === 1, 'Ingress queue append should run once for interactivity submit.');
+  return JSON.stringify({ ok: true, response: response });
+}
+
+function hostTest_requestPathDoesNotMutate_inlineWorkflowEnroll() {
+  var spies = _buildIngressRequestPathSpies_();
+  var service = spies.service;
+  var response = service.handleWorkflowWebhook({
+    routeType: 'workflow_webhook',
+    userId: 'U123',
+    teamId: 'T123',
+    channelId: 'C123',
+    params: {},
+    body: {
+      data: {
+        user_id: 'U123',
+        email: 'test@rwrgroup.com',
+        name: 'Test Learner',
+        course_id: 'C001'
+      }
+    }
+  }, { correlationId: 'req_test_3' });
+
+  Util.assert(spies.enrollmentCalls === 0, 'Enrollment mutator must not run inline for workflow webhook.');
+  Util.assert(spies.queueCalls === 1, 'Ingress queue append should run once for workflow webhook.');
+  return JSON.stringify({ ok: true, response: response });
+}
+
 function hostTest_fakeSlashSubmit() {
   return doPost(_fakeSignedSlash('/submit', 'PRE-M01 complete')).getContent();
 }
@@ -78,6 +151,38 @@ function hostTest_fakeMessageIm() {
   return doPost(_fakeSignedEvent('message', 'im')).getContent();
 }
 
+function hostTest_reactionAdded_nonCheckmarkIgnored() {
+  var deps = createHostDependencies();
+  var parsed = {
+    body: {
+      event_id: 'EV_NON_CHECK_001',
+      event: {
+        type: 'reaction_added',
+        reaction: 'thumbsup',
+        user: 'U123',
+        item: { type: 'message', channel: 'C123', ts: '1712345678.000001' }
+      }
+    }
+  };
+  return JSON.stringify(deps.slackService.handleEventCallback(parsed));
+}
+
+function hostTest_reactionAdded_malformedPayloadIgnored() {
+  var deps = createHostDependencies();
+  deps.slackService._slack = {
+    fetchMessageByTs: function() {
+      return { ok: true, message: { text: '/submit PRE-M01 complete' } };
+    }
+  };
+  var parsed = {
+    body: {
+      event_id: 'EV_MALFORMED_001',
+      event: { type: 'reaction_added', reaction: 'white_check_mark', user: 'U123', item: { type: 'message', channel: 'C123' } }
+    }
+  };
+  return JSON.stringify(deps.slackService.handleEventCallback(parsed));
+}
+
 function hostTest_auditLogAppendOnly_insertAllowed() {
   var deps = createHostDependencies();
   var row = deps.db.table('audit_log').insert({
@@ -145,6 +250,41 @@ function _assertAuditLogViolation(callback, operation) {
       message: err.message
     });
   }
+}
+
+function _buildIngressRequestPathSpies_() {
+  var queueCalls = 0;
+  var lessonCalls = 0;
+  var completionCalls = 0;
+  var enrollmentCalls = 0;
+  var security = SecurityService;
+
+  var service = new SlackService({
+    lessonService: {
+      handleLesson: function() { lessonCalls += 1; return { ok: true }; },
+      handleMix: function() { lessonCalls += 1; return { ok: true }; }
+    },
+    completionService: {
+      handleSubmit: function() { completionCalls += 1; return { ok: true }; },
+      recordSubmission: function() { completionCalls += 1; return { ok: true }; }
+    },
+    progressService: { handleProgress: function() { return { ok: true }; }, handleReinforce: function() { return { ok: true }; } },
+    enrollmentService: { enrollLearner: function() { enrollmentCalls += 1; return { ok: true }; } },
+    reportService: { buildAdminDashboard: function() { return {}; }, handleGaps: function() { return { ok: true }; } },
+    onboardingService: { startOnboarding: function() { return { ok: true }; }, handleAuditQuery: function() { return { ok: true }; }, handleOffboard: function() { return { ok: true }; } },
+    ingressQueueService: {
+      generateIdempotencyKey: function() { return 'ik_test'; },
+      appendJob: function() { queueCalls += 1; return { ok: true, jobId: 'J1' }; }
+    }
+  }, { buildAdminSummary: function() { return []; } }, { adminUserIds: ['U123'], defaultCourseId: 'C001' }, security, null);
+
+  return {
+    service: service,
+    get queueCalls() { return queueCalls; },
+    get lessonCalls() { return lessonCalls; },
+    get completionCalls() { return completionCalls; },
+    get enrollmentCalls() { return enrollmentCalls; }
+  };
 }
 
 function _fakeSignedSlash(command, text) {
@@ -242,15 +382,17 @@ function runSmokeTests() {
   return _runSuite('smoke', [
     function() {
       var db = createHostDbClient();
-      var requiredTables = [
-        'learners', 'enrollment', 'lessons', 'learner_progress',
-        'submission_log', 'delivery_queue', 'retry_queue', 'audit_log'
-      ];
+      var requiredTables = Object.keys(DbSchema.CONTRACT.TABLES);
       requiredTables.forEach(function(tableName) {
         var schema = db.schema(tableName);
         _assert(schema && Array.isArray(schema.columns) && schema.columns.length > 0, 'Missing or invalid schema: ' + tableName);
       });
       return { message: 'Required tables are registered and readable.' };
+    },
+    function() {
+      var result = JSON.parse(hostTest_createHostDependencies_wiresIngressQueue());
+      _assert(result.ok, 'createHostDependencies should wire ingress queue into SlackService.');
+      return { message: 'createHostDependencies wires ingress queue service into SlackService.' };
     }
   ]);
 }
@@ -269,15 +411,18 @@ function runSecurityTests() {
         message: 'append-only verification',
         metadata: '{}'
       });
-      var mid = db.table('audit_log').findAll().length;
-      db.table('audit_log').remove(row.id);
-      var afterRows = db.table('audit_log').findAll().length;
+      var afterInsert = db.table('audit_log').findAll().length;
       var rawRows = db._sheets.readTable('audit_log').rows.length;
 
-      _assert(mid === before + 1, 'Audit log insert must append exactly one row.', { before: before, mid: mid });
-      _assert(afterRows === before, 'Soft-deleted audit rows must disappear from active reads.', { before: before, afterRows: afterRows });
-      _assert(rawRows >= mid, 'Underlying audit_log rows must remain append-only (no physical delete).', { rawRows: rawRows, expectedAtLeast: mid });
-      return { message: 'Audit log behavior is append-only at the storage layer.' };
+      _assert(afterInsert === before + 1, 'Audit log insert must append exactly one row.', { before: before, afterInsert: afterInsert });
+      _assert(rawRows >= afterInsert, 'Underlying audit_log rows must remain append-only.', { rawRows: rawRows, expectedAtLeast: afterInsert });
+      _assertAuditAppendOnlyViolation(function() {
+        db.table('audit_log').update(row.id, { status: 'warn' });
+      }, 'update');
+      _assertAuditAppendOnlyViolation(function() {
+        db.table('audit_log').remove(row.id);
+      }, 'remove');
+      return { message: 'Audit log is append-only (insert allowed, update/remove blocked).' };
     }
   ]);
 }
@@ -286,11 +431,52 @@ function runSchemaContractTests() {
   return _runSuite('schema_contract', [
     function() {
       var db = createHostDbClient();
-      var columns = db.schema('lessons').columns;
-      _assert(columns.length === 24, 'Lessons schema column count changed.', { expected: 24, actual: columns.length });
-      return { message: 'Lessons schema column count matches expected contract (24).' };
+      var contractTables = DbSchema.CONTRACT.TABLES;
+      var tableNames = Object.keys(contractTables);
+      _assert(tableNames.length === 13, 'Canonical table count changed.', { expected: 13, actual: tableNames.length });
+
+      tableNames.forEach(function(tableName) {
+        var actualColumns = db.schema(tableName).columns;
+        var expectedColumns = contractTables[tableName];
+        _assert(_sameColumns(actualColumns, expectedColumns), 'Schema mismatch for table: ' + tableName, {
+          expected: expectedColumns,
+          actual: actualColumns
+        });
+      });
+
+      var lessonColumns = db.schema('lessons').columns;
+      _assert(lessonColumns.length === 41, 'Lessons schema must remain at 41 columns.', {
+        expected: 41,
+        actual: lessonColumns.length
+      });
+      _assert(_sameColumns(lessonColumns, DbSchema.CONTRACT.LESSONS_COLUMNS), 'Lessons schema order mismatch against canonical contract.', {
+        expected: DbSchema.CONTRACT.LESSONS_COLUMNS,
+        actual: lessonColumns
+      });
+
+      return { message: 'Canonical schema contract validated for all 13 tables and 41-column lessons order.' };
     }
   ]);
+}
+
+function _sameColumns(actual, expected) {
+  if (!Array.isArray(actual) || !Array.isArray(expected)) return false;
+  if (actual.length !== expected.length) return false;
+  for (var i = 0; i < expected.length; i++) {
+    if (String(actual[i]) !== String(expected[i])) return false;
+  }
+  return true;
+}
+
+function _assertAuditAppendOnlyViolation(callback, operation) {
+  try {
+    callback();
+    throw new Error('Expected append-only violation for operation: ' + operation);
+  } catch (err) {
+    _assert(err && err.code === 'AUDIT_APPEND_ONLY_VIOLATION', 'Expected AUDIT_APPEND_ONLY_VIOLATION code for operation ' + operation + '.');
+    _assert(String(err.message || '').indexOf('Append-only violation') !== -1, 'Expected append-only violation message for operation ' + operation + '.');
+    return true;
+  }
 }
 
 function runStateMachineTests() {
@@ -308,6 +494,43 @@ function runStateMachineTests() {
       _assert(!invalid.ok, 'Invalid transition should fail.', invalid);
       _assert(invalid.code === 'INVALID_TRANSITION', 'Invalid transition should return INVALID_TRANSITION.', invalid);
       return { message: 'Invalid transition (not_started -> completed) rejected.' };
+    }
+  ]);
+}
+
+function runEventCallbackTests() {
+  return _runSuite('event_callback', [
+    function nonCheckmarkReactionIgnored() {
+      var deps = createHostDependencies();
+      var response = deps.slackService.handleEventCallback({
+        body: {
+          event_id: 'EV_TEST_NON_CHECK',
+          event: {
+            type: 'reaction_added',
+            reaction: 'eyes',
+            user: 'U123',
+            item: { type: 'message', channel: 'C123', ts: '1712345000.000001' }
+          }
+        }
+      });
+      _assert(response && response.reason === 'unsupported_reaction', 'Expected unsupported reaction to be ignored.', response);
+      return { message: 'Non-checkmark reactions are ignored.' };
+    },
+    function malformedReactionPayloadIgnored() {
+      var deps = createHostDependencies();
+      var response = deps.slackService.handleEventCallback({
+        body: {
+          event_id: 'EV_TEST_MALFORMED',
+          event: {
+            type: 'reaction_added',
+            reaction: 'white_check_mark',
+            user: 'U123',
+            item: { type: 'message', channel: 'C123' }
+          }
+        }
+      });
+      _assert(response && response.reason === 'MALFORMED_REACTION_EVENT', 'Expected malformed reaction payload to be ignored.', response);
+      return { message: 'Malformed reaction payload is ignored with explicit reason.' };
     }
   ]);
 }
