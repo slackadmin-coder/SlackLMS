@@ -56,6 +56,7 @@ function createHostDependencies(config) {
   var retryResolver = new RetryResolver(db, cfg, configRepo);
   var slackApi = new SlackApiClient(cfg, retryResolver);
 
+  var ingressQueueTable = DbSchema.RETRY_QUEUE.TABLE;
   var deps = {
     config: cfg,
     db: db,
@@ -74,7 +75,7 @@ function createHostDependencies(config) {
     reminderService: new LmsReminderService(db, slackApi, blocks, cfg),
     reportService: new ReportService(db, cfg, repositories),
     onboardingService: new OnboardingService(db, slackApi, blocks, cfg),
-    ingressQueueService: new IngressQueueService(db, SecurityService),
+    ingressQueueService: new IngressQueueService(db, SecurityService, ingressQueueTable),
     backupService: new BackupService(db, cfg),
     healthMonitor: new HealthMonitor(db, cfg),
     retryResolver: retryResolver,
@@ -109,7 +110,7 @@ function createHostDependencies(config) {
     completionService: deps.completionService,
     onboardingService: deps.onboardingService,
     slackApiClient: deps.slackApiClient
-  }, deps.ingressQueueService, cfg);
+  }, deps.ingressQueueService, cfg, ingressQueueTable);
 
   return deps;
 }

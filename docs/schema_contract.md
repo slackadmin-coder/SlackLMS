@@ -23,6 +23,7 @@ This document defines the **single canonical runtime schema contract** for the h
 13. `onboarding_task_log`
 
 > Non-canonical operational tables must not be added to host schema registration without a contract update.
+> Ingress job persistence is implemented on the canonical `retry_queue` table (namespaced `jobType` values prefixed with `ingress.`); `ingress_jobs` is not a canonical table.
 
 ## Column contract by table (ordered)
 

@@ -7,6 +7,14 @@ function hostTest_createHostDependencies_wiresIngressQueue() {
   Util.assert(!!deps.ingressQueueService, 'Expected ingressQueueService from createHostDependencies().');
   Util.assert(!!deps.slackService._ingressQueue, 'Expected SlackService ingress queue to be wired.');
   Util.assert(
+    deps.ingressQueueService._queueTableName === DbSchema.RETRY_QUEUE.TABLE,
+    'Expected ingress queue service to use canonical retry_queue table.'
+  );
+  Util.assert(
+    deps.queueProcessor._queueTableName === DbSchema.RETRY_QUEUE.TABLE,
+    'Expected queue processor to read canonical retry_queue table.'
+  );
+  Util.assert(
     deps.slackService._ingressQueue === deps.ingressQueueService,
     'Expected SlackService ingress queue to reference deps.ingressQueueService.'
   );

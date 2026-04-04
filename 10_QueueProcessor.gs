@@ -1,7 +1,8 @@
 class IngressQueueService {
-  constructor(db, securityService) {
+  constructor(db, securityService, queueTableName) {
     this._db = db;
     this._security = securityService || SecurityService;
+    this._queueTableName = String(queueTableName || 'retry_queue');
   }
 
   generateIdempotencyKey(routeType, jobType, payload) {
@@ -26,24 +27,28 @@ class IngressQueueService {
       return { ok: false, code: 'INVALID_QUEUE_APPEND', message: 'Missing routeType/jobType/idempotencyKey' };
     }
 
-    var existing = this._db.table('ingress_jobs').findAll().filter(function(row) {
-      return row.idempotencyKey === idempotencyKey && row.status !== 'failed';
+    var queueTable = this._db.table(this._queueTableName);
+    var existing = queueTable.findAll().filter(function(row) {
+      if (String(row.jobType || '').indexOf('ingress.') !== 0) return false;
+      if (String(row.correlationId || '') !== idempotencyKey) return false;
+      return row.status !== 'failed';
     })[0];
     if (existing) {
       return { ok: true, code: 'DUPLICATE', duplicate: true, jobId: existing.id, idempotencyKey: idempotencyKey };
     }
 
-    var row = this._db.table('ingress_jobs').insert({
-      routeType: routeType,
-      jobType: jobType,
-      idempotencyKey: idempotencyKey,
-      status: 'queued',
-      payload: JSON.stringify(payload),
-      requestMeta: JSON.stringify(requestMeta),
+    var row = queueTable.insert({
+      jobType: 'ingress.' + jobType,
+      payload: JSON.stringify({
+        routeType: routeType,
+        payload: payload,
+        requestMeta: requestMeta
+      }),
       attempts: '0',
-      availableAt: nowIso,
+      nextRunAt: nowIso,
+      status: 'queued',
       lastError: '',
-      processedAt: ''
+      correlationId: idempotencyKey
     });
 
     return { ok: true, code: 'QUEUED', duplicate: false, jobId: row.id, idempotencyKey: idempotencyKey };
@@ -51,11 +56,12 @@ class IngressQueueService {
 }
 
 class QueueProcessor {
-  constructor(db, services, queueService, config) {
+  constructor(db, services, queueService, config, queueTableName) {
     this._db = db;
     this._services = services || {};
     this._queue = queueService;
     this._config = config || {};
+    this._queueTableName = String(queueTableName || 'retry_queue');
   }
 
   processIngressJobs(limit) {
@@ -63,11 +69,12 @@ class QueueProcessor {
     var retryThreshold = Number(this._config.pipelineMaxRetries || 3);
     var now = new Date();
     var nowIso = now.toISOString();
-    var table = this._db.table('ingress_jobs');
+    var table = this._db.table(this._queueTableName);
     var jobs = table.findAll().filter(function(row) {
+      if (String(row.jobType || '').indexOf('ingress.') !== 0) return false;
       if (row.status !== 'queued' && row.status !== 'retry') return false;
-      if (!row.availableAt) return true;
-      var availableMs = new Date(row.availableAt).getTime();
+      if (!row.nextRunAt) return true;
+      var availableMs = new Date(row.nextRunAt).getTime();
       return isNaN(availableMs) || availableMs <= now.getTime();
     }).slice(0, max);
 
@@ -76,7 +83,7 @@ class QueueProcessor {
       var job = jobs[i];
       try {
         this._executeJob(job);
-        table.update(job.id, { status: 'processed', processedAt: nowIso, updatedAt: nowIso, lastError: '' });
+        table.update(job.id, { status: 'processed', updatedAt: nowIso, lastError: '' });
         summary.processed += 1;
         summary.items.push({ id: job.id, ok: true });
       } catch (err) {
@@ -97,8 +104,10 @@ class QueueProcessor {
   }
 
   _executeJob(job) {
-    var payload = this._parseJobJson(job.payload);
-    switch (job.jobType) {
+    var envelope = this._parseJobJson(job.payload);
+    var payload = envelope.payload || {};
+    var normalizedJobType = String(job.jobType || '').replace(/^ingress\./, '');
+    switch (normalizedJobType) {
       case 'slash.learn':
       case 'slash.mix':
         this._services.lessonService.queueNextEligibleLessonForLearner(payload.userId);
