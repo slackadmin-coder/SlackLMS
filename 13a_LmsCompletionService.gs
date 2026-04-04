@@ -19,7 +19,12 @@ class LmsCompletionService {
       return { response_type: 'ephemeral', text: 'Usage: /submit <lesson_id> complete' };
     }
 
-    var result = this.recordSubmission({ slackUserId: ctx.userId, lessonId: lessonId, payload: ctx.rawBody });
+    var result = this.recordSubmission({
+      slackUserId: ctx.userId,
+      lessonId: lessonId,
+      payload: ctx.rawBody,
+      idempotencyKey: 'submit:' + this._security.sanitizeInput(ctx.userId || '') + ':' + lessonId + ':complete'
+    });
     if (!result.ok) return { response_type: 'ephemeral', text: result.message || result.error_code };
     return { response_type: 'ephemeral', text: 'Submission received for ' + lessonId + '. Correlation: ' + result.correlationId };
   }
@@ -32,7 +37,10 @@ class LmsCompletionService {
         if (!ctx.data.learner) throw { code: 'LEARNER_NOT_FOUND', message: 'Learner not found.' };
       },
       process: function(ctx) {
-        ctx.data.submitKey = ctx.data.learner.id + ':' + ctx.trigger.lessonId;
+        ctx.data.submitKey = self._security.sanitizeInput(ctx.trigger.idempotencyKey || '');
+        if (!ctx.data.submitKey) {
+          ctx.data.submitKey = ctx.data.learner.id + ':' + ctx.trigger.lessonId;
+        }
         ctx.data.existing = self._db.table('submission_log').findAll().filter(function(r) { return r.submitKey === ctx.data.submitKey; })[0];
         if (!ctx.data.existing) {
           ctx.data.submission = self._db.table('submission_log').insert({
@@ -97,7 +105,15 @@ class LmsCompletionService {
         };
       },
       audit: function(ctx) {
-        self._db.audit('record_submission', 'submission_log', { learnerId: ctx.data.learner.id, lessonId: ctx.trigger.lessonId, correlationId: ctx.correlationId });
+        var metadata = {
+          learnerId: ctx.data.learner.id,
+          lessonId: ctx.trigger.lessonId,
+          correlationId: ctx.correlationId
+        };
+        Object.keys(ctx.trigger.auditMeta || {}).forEach(function(key) {
+          metadata[key] = ctx.trigger.auditMeta[key];
+        });
+        self._db.audit('record_submission', 'submission_log', metadata);
       }
     });
   }

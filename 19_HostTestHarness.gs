@@ -140,6 +140,38 @@ function hostTest_fakeMessageIm() {
   return doPost(_fakeSignedEvent('message', 'im')).getContent();
 }
 
+function hostTest_reactionAdded_nonCheckmarkIgnored() {
+  var deps = createHostDependencies();
+  var parsed = {
+    body: {
+      event_id: 'EV_NON_CHECK_001',
+      event: {
+        type: 'reaction_added',
+        reaction: 'thumbsup',
+        user: 'U123',
+        item: { type: 'message', channel: 'C123', ts: '1712345678.000001' }
+      }
+    }
+  };
+  return JSON.stringify(deps.slackService.handleEventCallback(parsed));
+}
+
+function hostTest_reactionAdded_malformedPayloadIgnored() {
+  var deps = createHostDependencies();
+  deps.slackService._slack = {
+    fetchMessageByTs: function() {
+      return { ok: true, message: { text: '/submit PRE-M01 complete' } };
+    }
+  };
+  var parsed = {
+    body: {
+      event_id: 'EV_MALFORMED_001',
+      event: { type: 'reaction_added', reaction: 'white_check_mark', user: 'U123', item: { type: 'message', channel: 'C123' } }
+    }
+  };
+  return JSON.stringify(deps.slackService.handleEventCallback(parsed));
+}
+
 function hostTest_auditLogAppendOnly_insertAllowed() {
   var deps = createHostDependencies();
   var row = deps.db.table('audit_log').insert({
@@ -291,7 +323,7 @@ function runAllTests() {
     runSecurityTests(),
     runSchemaContractTests(),
     runStateMachineTests(),
-    runRequestPathContractTests()
+    runEventCallbackTests()
   ];
 
   var summary = suites.reduce(function(acc, suite) {
@@ -442,6 +474,43 @@ function runStateMachineTests() {
       _assert(!invalid.ok, 'Invalid transition should fail.', invalid);
       _assert(invalid.code === 'INVALID_TRANSITION', 'Invalid transition should return INVALID_TRANSITION.', invalid);
       return { message: 'Invalid transition (not_started -> completed) rejected.' };
+    }
+  ]);
+}
+
+function runEventCallbackTests() {
+  return _runSuite('event_callback', [
+    function nonCheckmarkReactionIgnored() {
+      var deps = createHostDependencies();
+      var response = deps.slackService.handleEventCallback({
+        body: {
+          event_id: 'EV_TEST_NON_CHECK',
+          event: {
+            type: 'reaction_added',
+            reaction: 'eyes',
+            user: 'U123',
+            item: { type: 'message', channel: 'C123', ts: '1712345000.000001' }
+          }
+        }
+      });
+      _assert(response && response.reason === 'unsupported_reaction', 'Expected unsupported reaction to be ignored.', response);
+      return { message: 'Non-checkmark reactions are ignored.' };
+    },
+    function malformedReactionPayloadIgnored() {
+      var deps = createHostDependencies();
+      var response = deps.slackService.handleEventCallback({
+        body: {
+          event_id: 'EV_TEST_MALFORMED',
+          event: {
+            type: 'reaction_added',
+            reaction: 'white_check_mark',
+            user: 'U123',
+            item: { type: 'message', channel: 'C123' }
+          }
+        }
+      });
+      _assert(response && response.reason === 'MALFORMED_REACTION_EVENT', 'Expected malformed reaction payload to be ignored.', response);
+      return { message: 'Malformed reaction payload is ignored with explicit reason.' };
     }
   ]);
 }

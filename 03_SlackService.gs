@@ -9,7 +9,7 @@ class SlackService {
     this._enrollment = services.enrollmentService;
     this._report = services.reportService;
     this._onboarding = services.onboardingService;
-    this._ingressQueue = services.ingressQueueService;
+    this._slack = services.slackApiClient || null;
     this._blocks = blocks;
     this._config = config || {};
     this._security = securityService || SecurityService;
@@ -74,10 +74,11 @@ class SlackService {
     if (actionId === 'submit_lesson') {
       var submit = this._enqueueIngressJob('interactivity', 'interactivity.submit_lesson', {
         slackUserId: parsed.userId,
-        lessonId: this._security.sanitizeInput(action.value || ''),
-        payload: JSON.stringify(payload)
-      }, parsed, requestContext || {});
-      return { response_type: 'ephemeral', text: submit.ok ? ':hourglass_flowing_sand: Submission queued.' : (submit.message || submit.error_code) };
+        lessonId: lessonId,
+        payload: JSON.stringify(payload),
+        idempotencyKey: this._buildSubmissionIdempotencyKey(parsed.userId, lessonId)
+      });
+      return { response_type: 'ephemeral', text: submit.ok ? ':white_check_mark: Lesson submitted.' : (submit.message || submit.error_code) };
     }
 
     return { response_type: 'ephemeral', text: 'Action received. Use /help to see supported actions.' };
@@ -85,6 +86,9 @@ class SlackService {
 
   handleEventCallback(parsed, requestContext) {
     var event = (parsed.body && parsed.body.event) ? parsed.body.event : {};
+    if (event.type === 'reaction_added') {
+      return this._handleReactionAdded(parsed, event);
+    }
     if (event.type === 'app_mention') {
       this._enqueueIngressJob('event_callback', 'event.app_mention', {
         userId: event.user || parsed.userId,
@@ -213,11 +217,12 @@ class SlackService {
       return { response_type: 'ephemeral', text: 'Usage: /submit <lesson_id> complete' };
     }
 
-    var queued = this._enqueueIngressJob('slash_command', 'slash.submit', {
-      slackUserId: parsed.userId,
-      lessonId: lessonId,
-      payload: parsed.rawBody
-    }, parsed, requestContext || {});
+    var persisted = this._completion.recordSubmission({
+      slackUserId: learnerId,
+      lessonId: lessonValue,
+      payload: JSON.stringify({ notes: notesValue, source: 'modal_submission' }),
+      idempotencyKey: this._buildSubmissionIdempotencyKey(learnerId, lessonValue)
+    });
 
     return queued.ok
       ? { response_type: 'ephemeral', text: 'Submission queued for ' + lessonId + '.', job_id: queued.jobId }
@@ -252,5 +257,133 @@ class SlackService {
   _extractModalValue(values, blockId, actionId) {
     if (!values[blockId] || !values[blockId][actionId]) return '';
     return this._security.sanitizeInput(values[blockId][actionId].value || '');
+  }
+
+  _handleReactionAdded(parsed, event) {
+    var reaction = String(event.reaction || '');
+    if (!this._isCompletionReaction(reaction)) {
+      return { ok: true, text: 'Reaction ignored', eventType: event.type || '', reason: 'unsupported_reaction' };
+    }
+
+    var eventId = this._security.sanitizeInput((parsed.body && parsed.body.event_id) || '');
+    if (!eventId) {
+      return { ok: true, text: 'Reaction ignored', eventType: event.type || '', reason: 'missing_event_id' };
+    }
+    if (!this._claimReplayGuard(eventId)) {
+      this._auditReactionEvent('reaction_submission_duplicate_event', eventId, event, { replayed: true });
+      return { ok: true, text: 'Reaction ignored', eventType: event.type || '', reason: 'duplicate_event' };
+    }
+
+    var context = this._resolveReactionContext(event);
+    if (!context.ok) {
+      this._auditReactionEvent('reaction_submission_context_failed', eventId, event, { reason: context.code || 'CONTEXT_NOT_FOUND' });
+      return { ok: true, text: 'Reaction ignored', eventType: event.type || '', reason: context.code || 'CONTEXT_NOT_FOUND' };
+    }
+
+    var idempotencyKey = this._buildSubmissionIdempotencyKey(context.slackUserId, context.lessonId);
+    var submission = this._completion.recordSubmission({
+      slackUserId: context.slackUserId,
+      lessonId: context.lessonId,
+      payload: JSON.stringify({ source: 'reaction_added', event_id: eventId, channel: context.channel, ts: context.ts }),
+      idempotencyKey: idempotencyKey,
+      auditMeta: {
+        source: 'reaction_added',
+        event_id: eventId,
+        user: context.slackUserId,
+        channel: context.channel,
+        ts: context.ts
+      }
+    });
+
+    this._auditReactionEvent('reaction_submission_processed', eventId, event, {
+      lessonId: context.lessonId,
+      idempotencyKey: idempotencyKey,
+      resultCode: submission.code || '',
+      ok: !!submission.ok
+    });
+    return { ok: true, text: submission.ok ? 'Reaction submission processed' : (submission.message || submission.code || 'Submission failed') };
+  }
+
+  _isCompletionReaction(reaction) {
+    var normalized = String(reaction || '').toLowerCase();
+    return normalized === 'white_check_mark' || normalized === '✅';
+  }
+
+  _resolveReactionContext(event) {
+    var slackUserId = this._security.sanitizeInput(event.user || '');
+    var item = event.item || {};
+    var channel = this._security.sanitizeInput(item.channel || event.item_channel || '');
+    var ts = this._security.sanitizeInput(item.ts || event.event_ts || '');
+    if (!slackUserId || !channel || !ts) return { ok: false, code: 'MALFORMED_REACTION_EVENT' };
+
+    var lessonId = this._extractLessonIdFromMessageLookup(channel, ts);
+    if (!lessonId) return { ok: false, code: 'LESSON_CONTEXT_NOT_FOUND' };
+    return { ok: true, slackUserId: slackUserId, lessonId: lessonId, channel: channel, ts: ts };
+  }
+
+  _extractLessonIdFromMessageLookup(channel, ts) {
+    if (!this._slack || typeof this._slack.fetchMessageByTs !== 'function') return '';
+    var lookedUp = this._slack.fetchMessageByTs(channel, ts);
+    if (!lookedUp || !lookedUp.ok || !lookedUp.message) return '';
+    var message = lookedUp.message;
+    var metadata = message.metadata || {};
+    var payload = metadata.event_payload || {};
+    var candidate = payload.lessonId || payload.lesson_id || metadata.lessonId || metadata.lesson_id || '';
+    if (!candidate && Array.isArray(message.blocks)) {
+      for (var i = 0; i < message.blocks.length; i++) {
+        var block = message.blocks[i];
+        if (block.type !== 'context' || !Array.isArray(block.elements)) continue;
+        for (var j = 0; j < block.elements.length; j++) {
+          var text = String((block.elements[j] && block.elements[j].text) || '');
+          var match = text.match(/[A-Z0-9]+-[A-Z0-9-]+/);
+          if (match) {
+            candidate = match[0];
+            break;
+          }
+        }
+        if (candidate) break;
+      }
+    }
+
+    if (!candidate) {
+      var textBody = String(message.text || '');
+      var submitMatch = textBody.match(/\/submit\s+([A-Za-z0-9-]+)\s+complete/i);
+      if (submitMatch) candidate = submitMatch[1];
+    }
+    return this._security.sanitizeInput(candidate || '');
+  }
+
+  _buildSubmissionIdempotencyKey(slackUserId, lessonId) {
+    return 'submit:' + this._security.sanitizeInput(slackUserId || '') + ':' + this._security.sanitizeInput(lessonId || '') + ':complete';
+  }
+
+  _claimReplayGuard(eventId) {
+    var key = 'slack_event_reaction_' + eventId;
+    try {
+      var cache = CacheService.getScriptCache();
+      if (cache.get(key)) return false;
+      cache.put(key, '1', 60 * 60 * 6);
+      return true;
+    } catch (err) {
+      this._localReplayGuard = this._localReplayGuard || {};
+      if (this._localReplayGuard[key]) return false;
+      this._localReplayGuard[key] = true;
+      return true;
+    }
+  }
+
+  _auditReactionEvent(action, eventId, event, extra) {
+    if (!this._completion || !this._completion._db || typeof this._completion._db.audit !== 'function') return;
+    var item = event.item || {};
+    var metadata = {
+      event_id: eventId,
+      user: this._security.sanitizeInput(event.user || ''),
+      channel: this._security.sanitizeInput(item.channel || ''),
+      ts: this._security.sanitizeInput(item.ts || '')
+    };
+    Object.keys(extra || {}).forEach(function(key) {
+      metadata[key] = extra[key];
+    });
+    this._completion._db.audit(action, 'submission_log', metadata);
   }
 }
