@@ -9,6 +9,7 @@ class SlackService {
     this._enrollment = services.enrollmentService;
     this._report = services.reportService;
     this._onboarding = services.onboardingService;
+    this._ingressQueue = services.ingressQueueService || null;
     this._slack = services.slackApiClient || null;
     this._blocks = blocks;
     this._config = config || {};
