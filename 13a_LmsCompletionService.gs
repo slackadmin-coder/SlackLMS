@@ -26,6 +26,7 @@ class LmsCompletionService {
 
   recordSubmission(input) {
     var self = this;
+    var skillId = SkillRegistry.workflowActionSkills.submission; // skill-trace: SKILL-SUBMISSION-001
     return this._workflow.run('submission', input, {
       validate: function(ctx) {
         ctx.data.learner = self._repos.learnerRepo.findBySlackUserId(ctx.trigger.slackUserId);
@@ -90,6 +91,7 @@ class LmsCompletionService {
         ctx.result = {
           ok: true,
           code: ctx.data.existing ? 'DUPLICATE_SUBMISSION' : 'SUBMISSION_RECORDED',
+          skillId: skillId,
           learnerId: ctx.data.learner.id,
           submissionId: ctx.data.existing ? ctx.data.existing.id : ctx.data.submission.id,
           message: ctx.data.existing ? 'Submission already recorded.' : 'Submission recorded.',
@@ -97,7 +99,7 @@ class LmsCompletionService {
         };
       },
       audit: function(ctx) {
-        self._db.audit('record_submission', 'submission_log', { learnerId: ctx.data.learner.id, lessonId: ctx.trigger.lessonId, correlationId: ctx.correlationId });
+        self._db.audit('record_submission', 'submission_log', { learnerId: ctx.data.learner.id, lessonId: ctx.trigger.lessonId, correlationId: ctx.correlationId, skillId: skillId });
       }
     });
   }

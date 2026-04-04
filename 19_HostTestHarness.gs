@@ -193,7 +193,8 @@ function runAllTests() {
     runSmokeTests(),
     runSecurityTests(),
     runSchemaContractTests(),
-    runStateMachineTests()
+    runStateMachineTests(),
+    runTraceabilityTests()
   ];
 
   var summary = suites.reduce(function(acc, suite) {
@@ -211,6 +212,30 @@ function runAllTests() {
     failCount: summary.failCount,
     results: suites
   };
+}
+
+function runTraceabilityTests() {
+  return _runSuite('traceability', [
+    function skillRegistryContainsRequiredWorkflowActions() {
+      _assert(typeof SkillRegistry === 'object', 'SkillRegistry must be defined.');
+      _assert(Array.isArray(SkillRegistry.operationalSkills), 'SkillRegistry.operationalSkills must be an array.');
+      _assert(typeof SkillRegistry.workflowActionSkills === 'object', 'SkillRegistry.workflowActionSkills must be defined.');
+
+      var requiredActions = ['enrollment', 'submission', 'delivery', 'reporting', 'offboarding'];
+      var registeredIds = SkillRegistry.operationalSkills.map(function(skill) { return skill.id; });
+
+      requiredActions.forEach(function(action) {
+        var skillId = SkillRegistry.workflowActionSkills[action];
+        _assert(!!skillId, 'Missing skill mapping for workflow action: ' + action);
+        _assert(
+          registeredIds.indexOf(skillId) !== -1,
+          'Workflow action "' + action + '" maps to unregistered skill ID: ' + skillId
+        );
+      });
+
+      return { message: 'All required workflow actions map to registered skill IDs.' };
+    }
+  ]);
 }
 
 function runSmokeTests() {

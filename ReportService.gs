@@ -66,6 +66,7 @@ class ReportService {
   }
 
   buildAdminDashboard() {
+    var skillId = SkillRegistry.workflowActionSkills.reporting; // skill-trace: SKILL-REPORTING-001
     var learners = this._db.table('learners').findAll();
     var progress = this._db.table('learner_progress').findAll();
     var enrollment = this._db.table('enrollment').findAll();
@@ -81,6 +82,7 @@ class ReportService {
 
     return {
       ok: true,
+      skillId: skillId,
       generatedAt: new Date().toISOString(),
       totals: {
         learners: activeLearners.length,
