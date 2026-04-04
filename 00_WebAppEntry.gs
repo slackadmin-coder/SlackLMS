@@ -74,6 +74,7 @@ function createHostDependencies(config) {
     reminderService: new LmsReminderService(db, slackApi, blocks, cfg),
     reportService: new ReportService(db, cfg, repositories),
     onboardingService: new OnboardingService(db, slackApi, blocks, cfg),
+    ingressQueueService: new IngressQueueService(db, SecurityService),
     backupService: new BackupService(db, cfg),
     healthMonitor: new HealthMonitor(db, cfg),
     retryResolver: retryResolver,
@@ -97,8 +98,17 @@ function createHostDependencies(config) {
     progressService: deps.progressService,
     enrollmentService: deps.enrollmentService,
     reportService: deps.reportService,
-    onboardingService: deps.onboardingService
+    onboardingService: deps.onboardingService,
+    ingressQueueService: deps.ingressQueueService
   }, deps.blockKitBuilder, deps.config, SecurityService, configRepo);
+
+  deps.queueProcessor = new QueueProcessor(db, {
+    enrollmentService: deps.enrollmentService,
+    lessonService: deps.lessonService,
+    completionService: deps.completionService,
+    onboardingService: deps.onboardingService,
+    slackApiClient: deps.slackApiClient
+  }, deps.ingressQueueService, cfg);
 
   return deps;
 }

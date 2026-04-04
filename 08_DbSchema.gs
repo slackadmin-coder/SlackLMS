@@ -5,6 +5,7 @@ var DbSchema = {
   LEARNER_PROGRESS:      { TABLE: 'learner_progress',      PK: 'id' },
   SUBMISSION_LOG:        { TABLE: 'submission_log',        PK: 'id' },
   DELIVERY_QUEUE:        { TABLE: 'delivery_queue',        PK: 'id' },
+  INGRESS_JOBS:          { TABLE: 'ingress_jobs',          PK: 'id' },
   RETRY_QUEUE:           { TABLE: 'retry_queue',           PK: 'id' },
   AUDIT_LOG:             { TABLE: 'audit_log',             PK: 'id' },
   COURSES:               { TABLE: 'courses',               PK: 'id' },
