@@ -2,6 +2,17 @@ function hostTest_fakeSlashLearn() {
   return doPost(_fakeSignedSlash('/learn', '')).getContent();
 }
 
+function hostTest_createHostDependencies_wiresIngressQueue() {
+  var deps = createHostDependencies();
+  Util.assert(!!deps.ingressQueueService, 'Expected ingressQueueService from createHostDependencies().');
+  Util.assert(!!deps.slackService._ingressQueue, 'Expected SlackService ingress queue to be wired.');
+  Util.assert(
+    deps.slackService._ingressQueue === deps.ingressQueueService,
+    'Expected SlackService ingress queue to reference deps.ingressQueueService.'
+  );
+  return JSON.stringify({ ok: true });
+}
+
 function hostTest_requestPathDoesNotMutate_inlineSlashLearn() {
   var spies = _buildIngressRequestPathSpies_();
   var service = spies.service;
@@ -373,6 +384,11 @@ function runSmokeTests() {
         _assert(schema && Array.isArray(schema.columns) && schema.columns.length > 0, 'Missing or invalid schema: ' + tableName);
       });
       return { message: 'Required tables are registered and readable.' };
+    },
+    function() {
+      var result = JSON.parse(hostTest_createHostDependencies_wiresIngressQueue());
+      _assert(result.ok, 'createHostDependencies should wire ingress queue into SlackService.');
+      return { message: 'createHostDependencies wires ingress queue service into SlackService.' };
     }
   ]);
 }
