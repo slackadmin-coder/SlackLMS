@@ -118,3 +118,134 @@ function _buildSignedRequest(rawBody, type, params) {
     }
   };
 }
+
+function runAllTests() {
+  var suites = [
+    runSmokeTests(),
+    runSecurityTests(),
+    runSchemaContractTests(),
+    runStateMachineTests()
+  ];
+
+  var summary = suites.reduce(function(acc, suite) {
+    var passCount = suite.results.filter(function(result) { return !!result.ok; }).length;
+    var failCount = suite.results.length - passCount;
+    acc.passCount += passCount;
+    acc.failCount += failCount;
+    return acc;
+  }, { passCount: 0, failCount: 0 });
+
+  return {
+    suite: 'all',
+    ok: summary.failCount === 0,
+    passCount: summary.passCount,
+    failCount: summary.failCount,
+    results: suites
+  };
+}
+
+function runSmokeTests() {
+  return _runSuite('smoke', [
+    function() {
+      var db = createHostDbClient();
+      var requiredTables = [
+        'learners', 'enrollment', 'lessons', 'learner_progress',
+        'submission_log', 'delivery_queue', 'retry_queue', 'audit_log'
+      ];
+      requiredTables.forEach(function(tableName) {
+        var schema = db.schema(tableName);
+        _assert(schema && Array.isArray(schema.columns) && schema.columns.length > 0, 'Missing or invalid schema: ' + tableName);
+      });
+      return { message: 'Required tables are registered and readable.' };
+    }
+  ]);
+}
+
+function runSecurityTests() {
+  return _runSuite('security', [
+    function() {
+      var db = createHostDbClient();
+      var before = db.table('audit_log').findAll().length;
+      var row = db.table('audit_log').insert({
+        actor: 'host_test',
+        action: 'append_only_check',
+        resourceType: 'audit_log',
+        resourceId: 'host_test',
+        status: 'info',
+        message: 'append-only verification',
+        metadata: '{}'
+      });
+      var mid = db.table('audit_log').findAll().length;
+      db.table('audit_log').remove(row.id);
+      var afterRows = db.table('audit_log').findAll().length;
+      var rawRows = db._sheets.readTable('audit_log').rows.length;
+
+      _assert(mid === before + 1, 'Audit log insert must append exactly one row.', { before: before, mid: mid });
+      _assert(afterRows === before, 'Soft-deleted audit rows must disappear from active reads.', { before: before, afterRows: afterRows });
+      _assert(rawRows >= mid, 'Underlying audit_log rows must remain append-only (no physical delete).', { rawRows: rawRows, expectedAtLeast: mid });
+      return { message: 'Audit log behavior is append-only at the storage layer.' };
+    }
+  ]);
+}
+
+function runSchemaContractTests() {
+  return _runSuite('schema_contract', [
+    function() {
+      var db = createHostDbClient();
+      var columns = db.schema('lessons').columns;
+      _assert(columns.length === 24, 'Lessons schema column count changed.', { expected: 24, actual: columns.length });
+      return { message: 'Lessons schema column count matches expected contract (24).' };
+    }
+  ]);
+}
+
+function runStateMachineTests() {
+  return _runSuite('state_machine', [
+    function() {
+      var sm = new LearnerProgressStateMachine();
+      var valid = sm.transition({ id: 'p1', state: sm.states.NOT_STARTED }, sm.states.IN_PROGRESS, { source: 'host_test' });
+      _assert(valid.ok, 'Valid transition should succeed.', valid);
+      _assert(valid.record.state === sm.states.IN_PROGRESS, 'Valid transition should update state.', valid.record);
+      return { message: 'Valid transition (not_started -> in_progress) succeeded.' };
+    },
+    function() {
+      var sm = new LearnerProgressStateMachine();
+      var invalid = sm.transition({ id: 'p2', state: sm.states.NOT_STARTED }, sm.states.COMPLETED, { source: 'host_test' });
+      _assert(!invalid.ok, 'Invalid transition should fail.', invalid);
+      _assert(invalid.code === 'INVALID_TRANSITION', 'Invalid transition should return INVALID_TRANSITION.', invalid);
+      return { message: 'Invalid transition (not_started -> completed) rejected.' };
+    }
+  ]);
+}
+
+function _runSuite(suiteName, tests) {
+  var results = [];
+  for (var i = 0; i < tests.length; i++) {
+    var testFn = tests[i];
+    var testName = testFn.name || ('test_' + (i + 1));
+    try {
+      var info = testFn() || {};
+      results.push({ test: testName, ok: true, message: info.message || '' });
+    } catch (err) {
+      results.push({
+        test: testName,
+        ok: false,
+        message: err && err.message ? err.message : String(err),
+        details: err && err.details ? err.details : null
+      });
+    }
+  }
+
+  return {
+    suite: suiteName,
+    ok: results.every(function(r) { return !!r.ok; }),
+    results: results
+  };
+}
+
+function _assert(condition, message, details) {
+  if (condition) return true;
+  var error = new Error(message || 'Assertion failed.');
+  if (details !== undefined) error.details = details;
+  throw error;
+}
