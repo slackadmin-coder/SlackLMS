@@ -94,6 +94,7 @@ function createHostDependencies(config) {
   deps.slackService = new SlackService({
     lessonService: deps.lessonService,
     completionService: deps.completionService,
+    slackApiClient: deps.slackApiClient,
     progressService: deps.progressService,
     enrollmentService: deps.enrollmentService,
     reportService: deps.reportService,

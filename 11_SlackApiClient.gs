@@ -32,6 +32,22 @@ class SlackApiClient {
     };
   }
 
+  fetchMessageByTs(channel, ts) {
+    var res = this._call('conversations.history', {
+      channel: channel,
+      oldest: ts,
+      latest: ts,
+      inclusive: true,
+      limit: 1
+    });
+    var message = (res.data && Array.isArray(res.data.messages) && res.data.messages[0]) || null;
+    return {
+      ok: !!res.ok && !!message,
+      code: message ? 'OK' : (res.code || 'MESSAGE_NOT_FOUND'),
+      message: message
+    };
+  }
+
   _isQuietHours() {
     var start = Number(this._config.quietHoursStart || 21);
     var end = Number(this._config.quietHoursEnd || 7);
