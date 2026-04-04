@@ -41,14 +41,50 @@ class LmsCompletionService {
             submitKey: ctx.data.submitKey,
             payload: ctx.trigger.payload || ''
           });
+        } else {
+          ctx.data.submission = self._db.table('submission_log').update(ctx.data.existing.id, {
+            payload: ctx.trigger.payload || ''
+          });
         }
       },
       persist: function(ctx) {
         var progressRow = self._repos.progressRepo.findByLearnerAndLesson(ctx.data.learner.id, ctx.trigger.lessonId);
-        if (progressRow && self._state.normalizeState(progressRow.state) !== self._state.states.COMPLETED) {
-          self.advanceLessonState({ learnerProgressId: progressRow.id, toState: self._state.states.SUBMITTED });
+        if (!progressRow) {
+          throw { code: 'PROGRESS_NOT_FOUND', message: 'No progress row found for learner and lesson.' };
         }
-        self.queueNextLesson({ learnerId: ctx.data.learner.id, currentLessonId: ctx.trigger.lessonId });
+
+        var normalized = self._state.normalizeState(progressRow.state);
+        if (normalized === self._state.states.COMPLETED) {
+          ctx.data.progressCompletion = { ok: true, code: 'ALREADY_COMPLETED', recordId: progressRow.id };
+          return;
+        }
+
+        var startState = String(progressRow.state || '').trim().toLowerCase();
+        if (startState !== 'delivered' && startState !== 'started') {
+          throw {
+            code: 'INVALID_START_STATE',
+            message: 'Submission is only allowed from delivered or started. Found: ' + (startState || '<empty>') + '.'
+          };
+        }
+
+        var submitted = self.advanceLessonState({
+          learnerId: ctx.data.learner.id,
+          lessonId: ctx.trigger.lessonId,
+          toState: self._state.states.SUBMITTED,
+          payload: ctx.trigger.payload || '',
+          startState: startState
+        });
+        if (!submitted.ok) throw submitted;
+
+        var completed = self.advanceLessonState({
+          learnerId: ctx.data.learner.id,
+          lessonId: ctx.trigger.lessonId,
+          toState: self._state.states.COMPLETED
+        });
+        if (!completed.ok) throw completed;
+
+        ctx.data.progressCompletion = completed;
+        ctx.data.queueResult = self.queueNextLesson({ learnerId: ctx.data.learner.id, currentLessonId: ctx.trigger.lessonId });
       },
       respond: function(ctx) {
         ctx.result = {
@@ -67,11 +103,27 @@ class LmsCompletionService {
   }
 
   advanceLessonState(input) {
-    var progress = this._repos.progressRepo.findById(input.learnerProgressId);
+    var progress = this._repos.progressRepo.findByLearnerAndLesson(input.learnerId, input.lessonId);
     if (!progress) return { ok: false, code: 'PROGRESS_NOT_FOUND', message: 'Progress not found.' };
-    var transition = this._state.transition(progress, input.toState, { source: 'submission' });
+
+    var progressSource = progress;
+    if (input.startState === 'delivered') {
+      progressSource = {};
+      Object.keys(progress).forEach(function(k) { progressSource[k] = progress[k]; });
+      progressSource.state = this._state.states.IN_PROGRESS;
+    }
+
+    var transition = this._state.transition(progressSource, input.toState, { source: 'submission' });
     if (!transition.ok) return transition;
-    this._repos.progressRepo.update(progress.id, { state: transition.record.state });
+
+    var patch = {
+      state: transition.record.state,
+      updatedAt: transition.record.updatedAt
+    };
+    if (transition.record.completedAt) patch.completedAt = transition.record.completedAt;
+    if (input.toState === this._state.states.SUBMITTED) patch.submissionText = String(input.payload || '');
+
+    this._repos.progressRepo.update(progress.id, patch);
     return { ok: true, code: 'STATE_UPDATED', recordId: progress.id };
   }
 
