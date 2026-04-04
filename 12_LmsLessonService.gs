@@ -10,48 +10,145 @@ class LmsLessonService {
   }
 
   handleLesson(ctx) {
-    var current = this.getCurrentLessonForLearner(ctx.userId);
-    if (!current.ok) return { response_type: 'ephemeral', text: current.message };
-
-    var payload = this._buildLessonMessagePayload(current.lesson, 'Your current lesson');
-    var dm = this._slack.openDm(ctx.userId);
-    if (!dm.ok) {
-      this._db.audit('learn_dm_failed', 'audit_log', {
-        learnerId: current.learnerId,
-        lessonId: current.lesson.id,
-        slackUserId: ctx.userId,
-        code: dm.code,
-        message: dm.message,
-        retryable: !!dm.retryable
-      });
-      return { response_type: 'ephemeral', text: 'I could not open a DM right now. Please try again in a moment.' };
+    var queued = this.queueNextEligibleLessonForLearner(ctx.userId);
+    if (!queued.ok) {
+      return { response_type: 'ephemeral', text: queued.message || 'Unable to queue lesson right now.' };
     }
 
-    var sent = this._slack.postMessage(dm.channelId, payload.text, payload.blocks);
-    if (!sent.ok) {
-      this._db.audit('learn_dm_failed', 'audit_log', {
-        learnerId: current.learnerId,
-        lessonId: current.lesson.id,
-        slackUserId: ctx.userId,
-        channelId: dm.channelId,
-        code: sent.code,
-        message: sent.message,
-        retryable: !!sent.retryable
-      });
-      return { response_type: 'ephemeral', text: 'I could not send your lesson DM. Please try again shortly.' };
-    }
-
-    this._db.audit('learn_dm_sent', 'audit_log', {
-      learnerId: current.learnerId,
-      lessonId: current.lesson.id,
-      slackUserId: ctx.userId,
-      channelId: dm.channelId
-    });
-    return { response_type: 'ephemeral', text: 'Sent your current lesson in DM :email:' };
+    return {
+      response_type: 'ephemeral',
+      text: 'Queued your next lesson for delivery. You will receive it in DM shortly.'
+    };
   }
 
   handleMix(ctx) {
     return this.handleLesson(ctx);
+  }
+
+  queueNextEligibleLessonForLearner(slackUserId) {
+    var learner = this._repos.learnerRepo.findBySlackUserId(slackUserId);
+    if (!learner) return { ok: false, code: 'LEARNER_NOT_FOUND', message: 'Learner not found.' };
+
+    var resolved = this.resolveNextEligibleLessonForLearner(learner.id);
+    if (!resolved.ok) return resolved;
+
+    var nowIso = new Date().toISOString();
+    var lesson = resolved.lesson;
+    var dedupedCount = this._dedupeQueuedEntries(learner.id, lesson.id, nowIso);
+
+    var queueRow = this._db.table('delivery_queue').insert({
+      learnerId: learner.id,
+      lessonId: lesson.id,
+      status: 'queued',
+      priority: 'normal',
+      runAt: nowIso,
+      attempts: '0',
+      availableAt: nowIso,
+      conditionExpr: ''
+    });
+
+    var existingProgress = this._repos.progressRepo.findByLearnerAndLesson(learner.id, lesson.id);
+    var progressId = '';
+    if (existingProgress) {
+      progressId = existingProgress.id;
+      this._repos.progressRepo.update(existingProgress.id, {
+        state: 'queued',
+        dueAt: existingProgress.dueAt || nowIso
+      });
+    } else {
+      var insertedProgress = this._repos.progressRepo.insert({
+        learnerId: learner.id,
+        lessonId: lesson.id,
+        state: 'queued',
+        dueAt: nowIso
+      });
+      progressId = insertedProgress.id;
+    }
+
+    this._db.audit('LESSON_QUEUED', 'delivery_queue', {
+      learnerId: learner.id,
+      lessonId: lesson.id,
+      queueId: queueRow.id,
+      progressId: progressId,
+      dedupedCount: dedupedCount,
+      source: '/learn'
+    });
+
+    return {
+      ok: true,
+      code: 'LESSON_QUEUED',
+      learnerId: learner.id,
+      lessonId: lesson.id,
+      queueId: queueRow.id,
+      progressId: progressId,
+      dedupedCount: dedupedCount
+    };
+  }
+
+  resolveNextEligibleLessonForLearner(learnerId) {
+    var progressRows = this._repos.progressRepo.findByLearnerId(learnerId).filter(function(row) {
+      return row.state !== 'completed';
+    });
+
+    var candidate = this._selectEligibleLessonFromProgress(progressRows);
+    if (candidate) return { ok: true, learnerId: learnerId, lesson: candidate.lesson, progress: candidate.progress };
+
+    var enrollment = this._db.table('enrollment').findAll().filter(function(row) {
+      return row.learnerId === learnerId && String(row.status || 'active') === 'active';
+    })[0];
+
+    if (!enrollment) {
+      return { ok: false, code: 'NO_ACTIVE_ENROLLMENT', message: 'No active enrollment found.' };
+    }
+
+    var lessons = this._repos.lessonRepo.findActiveByCourse(enrollment.courseId);
+    for (var i = 0; i < lessons.length; i++) {
+      if (this._isLessonQaApproved(lessons[i].id)) {
+        return { ok: true, learnerId: learnerId, lesson: lessons[i], progress: null };
+      }
+    }
+
+    return { ok: false, code: 'NO_ELIGIBLE_LESSON', message: 'No eligible lesson available yet.' };
+  }
+
+  _selectEligibleLessonFromProgress(progressRows) {
+    var candidates = [];
+    for (var i = 0; i < progressRows.length; i++) {
+      var progress = progressRows[i];
+      var lesson = this._repos.lessonRepo.findById(progress.lessonId);
+      if (!lesson) continue;
+      if (!this._isLessonQaApproved(lesson.id)) continue;
+      candidates.push({ lesson: lesson, progress: progress });
+    }
+
+    candidates.sort(function(a, b) {
+      return Number(a.lesson.sequenceNumber || 0) - Number(b.lesson.sequenceNumber || 0);
+    });
+
+    return candidates[0] || null;
+  }
+
+  _isLessonQaApproved(lessonId) {
+    var qaRecord = this._db.table('lesson_qa_records').findAll().filter(function(r) {
+      return r.lessonId === lessonId;
+    })[0];
+    var qaThreshold = Number((this._config.qaPassThreshold) || 70);
+    return !(qaRecord && Number(qaRecord.qaScore || 0) < qaThreshold);
+  }
+
+  _dedupeQueuedEntries(learnerId, lessonId, nowIso) {
+    var existingQueued = this._db.table('delivery_queue').findAll().filter(function(row) {
+      return row.learnerId === learnerId && row.lessonId === lessonId && row.status === 'queued';
+    });
+
+    for (var i = 0; i < existingQueued.length; i++) {
+      this._db.table('delivery_queue').update(existingQueued[i].id, {
+        status: 'deduped',
+        updatedAt: nowIso
+      });
+    }
+
+    return existingQueued.length;
   }
 
   getCurrentLessonForLearner(slackUserId) {
@@ -62,11 +159,7 @@ class LmsLessonService {
     if (!progress) return { ok: false, code: 'NO_ACTIVE_LESSON', message: 'No lesson assigned yet.' };
 
     var lesson = this._repos.lessonRepo.findById(progress.lessonId) || { id: progress.lessonId, title: 'Lesson', track: '' };
-    var qaRecord = this._db.table('lesson_qa_records').findAll().filter(function(r) {
-      return r.lessonId === progress.lessonId;
-    })[0];
-    var qaThreshold = Number((this._config.qaPassThreshold) || 70);
-    if (qaRecord && Number(qaRecord.qaScore || 0) < qaThreshold) {
+    if (!this._isLessonQaApproved(progress.lessonId)) {
       return { ok: false, code: 'LESSON_NOT_QA_APPROVED', message: 'This lesson has not passed QA review.' };
     }
     return { ok: true, learnerId: learner.id, lesson: lesson, progress: progress };
