@@ -218,12 +218,13 @@ class SlackService {
       return { response_type: 'ephemeral', text: 'Usage: /submit <lesson_id> complete' };
     }
 
-    var persisted = this._completion.recordSubmission({
-      slackUserId: learnerId,
-      lessonId: lessonValue,
-      payload: JSON.stringify({ notes: notesValue, source: 'modal_submission' }),
-      idempotencyKey: this._buildSubmissionIdempotencyKey(learnerId, lessonValue)
-    });
+    var payload = {
+      slackUserId: parsed.userId,
+      lessonId: lessonId,
+      payload: parsed.rawBody || JSON.stringify((parsed && parsed.params) || {}),
+      idempotencyKey: this._buildSubmissionIdempotencyKey(parsed.userId, lessonId)
+    };
+    var queued = this._enqueueIngressJob('slash_command', 'slash.submit', payload, parsed, requestContext || {});
 
     return queued.ok
       ? { response_type: 'ephemeral', text: 'Submission queued for ' + lessonId + '.', job_id: queued.jobId }
