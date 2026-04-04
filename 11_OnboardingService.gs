@@ -183,6 +183,7 @@ class OnboardingService {
   }
 
   offboardLearner(input) {
+    var skillId = SkillRegistry.workflowActionSkills.offboarding; // skill-trace: SKILL-OFFBOARDING-001
     var params = input || {};
     var learner = null;
     if (params.learnerId) learner = this._db.table('learners').findById(params.learnerId);
@@ -233,12 +234,14 @@ class OnboardingService {
       learnerId: learner.id,
       email: learner.email || '',
       source: params.source || 'manual',
-      cancelledQueueItems: cancelled
+      cancelledQueueItems: cancelled,
+      skillId: skillId
     });
 
     return {
       ok: true,
       code: 'LEARNER_OFFBOARDED',
+      skillId: skillId,
       learnerId: learner.id,
       email: learner.email || '',
       cancelledQueueItems: cancelled

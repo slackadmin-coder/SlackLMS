@@ -352,7 +352,7 @@ function runAllTests() {
     runSecurityTests(),
     runSchemaContractTests(),
     runStateMachineTests(),
-    runEventCallbackTests()
+    runTraceabilityTests()
   ];
 
   var summary = suites.reduce(function(acc, suite) {
