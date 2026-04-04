@@ -59,3 +59,10 @@ The test validates that:
 2. every mandatory canonical responsibility is present exactly once (by module ID);
 3. every drifted file in range `22_*.gs`–`36_*.gs` appears **exactly once** in explicit equivalence mapping;
 4. all drifted files map to a valid canonical module in `00`–`21`.
+
+## 4) Cross-references
+
+- Skill-level ownership and trigger controls: `docs/skills_registry.md`.
+- Milestone acceptance/evidence ledger (M6–M10): `docs/milestone_trace_matrix.md`.
+- Runtime architectural invariants and enforcement rules: `docs/architecture_guardrails.md`.
+- Canonical schema/table contract for owner modules: `docs/schema_contract.md`.

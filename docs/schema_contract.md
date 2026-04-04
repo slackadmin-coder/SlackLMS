@@ -87,3 +87,10 @@ Contract/security tests should assert append-only violations for `update/remove`
    - exact per-table ordered headers,
    - 41-column ordered `lessons` contract,
    - `audit_log` append-only enforcement.
+
+## Cross-references
+
+- Canonical module ownership and drift mapping: `docs/scaffold_traceability.md`.
+- Skill ownership, triggers, outputs, and controls: `docs/skills_registry.md`.
+- M6–M10 acceptance and evidence trace: `docs/milestone_trace_matrix.md`.
+- Runtime guardrails (queue-first, ownership, idempotency, security): `docs/architecture_guardrails.md`.

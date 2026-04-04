@@ -128,6 +128,11 @@ Also run syntax checks before deployment.
 - `architecture.md` — architecture, workflow/data/tool maps.
 - `deployment.md` — deployment and smoke tests.
 - `runbook.md` — production operations and incident response.
+- `docs/skills_registry.md` — canonical skill IDs, owner functions, triggers, outputs, and runtime controls.
+- `docs/milestone_trace_matrix.md` — M6–M10 acceptance criteria with code/test/deployment evidence.
+- `docs/architecture_guardrails.md` — queue-first, database-truth, ownership boundaries, idempotency/security guardrails.
+- `docs/scaffold_traceability.md` — canonical module ownership and drift mapping.
+- `docs/schema_contract.md` — canonical 13-table schema and append-only audit policy.
 - `README.md` — this overview.
 
 ## 12. Status Notes
